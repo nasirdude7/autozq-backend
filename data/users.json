@@ -1,0 +1,15 @@
+[
+  {
+    "id": "admin-001",
+    "username": "admin",
+    "email": "admin@autozq.ru",
+    "password": "$2b$10$HKBjOKPoyc7zxsoMthFVbOKS3dA3IryKYcM.UqdTSdfMpcr26V.kS",
+    "role": "admin",
+    "sites": [
+      "autozqi-ru"
+    ],
+    "apiKeys": {},
+    "createdAt": "2026-06-29T09:57:55.031Z",
+    "lastLogin": "2026-08-05T16:11:51.816Z"
+  }
+]

@@ -1,0 +1,9 @@
+node_modules/
+.env
+uploads/
+logs/
+*.log
+.DS_Store
+
+# 站点配置（包含敏感信息，不提交）
+config/sites.json
