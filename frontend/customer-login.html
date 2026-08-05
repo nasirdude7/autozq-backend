@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoZQ</title>
+    <script src="/js/customer-guard.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a3a5c 0%, #2d5a7b 100%);
+            min-height: 100vh; display: flex; align-items: center;
+            justify-content: center; padding: 20px;
+        }
+        .box {
+            background: #fff; border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,.3);
+            width: 100%; max-width: 400px; padding: 36px;
+        }
+        .logo { text-align: center; margin-bottom: 28px; }
+        .logo h1 { color: #1a3a5c; font-size: 26px; }
+        .logo p { color: #666; font-size: 13px; margin-top: 6px; }
+        .lang-switch { text-align: right; margin-bottom: 8px; }
+        .lang-switch button {
+            background: none; border: none; color: #888; cursor: pointer;
+            font-size: 13px; padding: 2px 6px;
+        }
+        .lang-switch button.active { color: #1a3a5c; font-weight: 700; }
+        .fg { margin-bottom: 16px; }
+        .fg label { display: block; font-size: 13px; color: #333; margin-bottom: 6px; }
+        .fg input {
+            width: 100%; padding: 12px 14px; border: 1px solid #ddd;
+            border-radius: 6px; font-size: 15px;
+        }
+        .fg input:focus { outline: none; border-color: #1a3a5c; }
+        .code-row { display: flex; gap: 8px; }
+        .code-row input { flex: 1; }
+        .btn-code {
+            white-space: nowrap; padding: 0 14px; border: 1px solid #1a3a5c;
+            background: #fff; color: #1a3a5c; border-radius: 6px; cursor: pointer; font-size: 13px;
+        }
+        .btn-code:disabled { border-color: #ccc; color: #aaa; cursor: not-allowed; }
+        .btn {
+            width: 100%; padding: 13px; background: #1a3a5c; color: #fff;
+            border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin-top: 6px;
+        }
+        .btn:hover { background: #2d5a7b; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .msg { padding: 10px; border-radius: 6px; font-size: 13px; margin-bottom: 14px; display: none; }
+        .msg.err { background: #fee; color: #c33; }
+        .msg.ok { background: #e8f5e9; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="lang-switch">
+            <button data-lang="ru">RU</button>
+            <button data-lang="en">EN</button>
+            <button data-lang="zh">中文</button>
+        </div>
+        <div class="logo">
+            <h1>🚗 AutoZQ</h1>
+            <p id="subtitle"></p>
+        </div>
+        <div id="msg" class="msg"></div>
+        <form id="loginForm">
+            <div class="fg">
+                <label id="lblPhone"></label>
+                <input type="tel" id="phone" placeholder="+7 999 123 45 67" required>
+            </div>
+            <div class="fg">
+                <label id="lblName"></label>
+                <input type="text" id="name">
+            </div>
+            <div class="fg">
+                <label id="lblCode"></label>
+                <div class="code-row">
+                    <input type="text" id="code" inputmode="numeric" maxlength="6" required>
+                    <button type="button" class="btn-code" id="btnCode"></button>
+                </div>
+            </div>
+            <button type="submit" class="btn" id="btnLogin"></button>
+        </form>
+    </div>
+    <script src="/js/customer-login.js"></script>
+</body>
+</html>

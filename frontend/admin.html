@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员仪表盘 - AutoZQ AI Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e1e;
+            color: #cccccc;
+        }
+
+        .header {
+            background: #252526;
+            border-bottom: 1px solid #3c3c3c;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #4ec9b0;
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-name {
+            color: #cccccc;
+            font-size: 14px;
+        }
+
+        .btn-logout {
+            background: #c33;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-logout:hover {
+            background: #a22;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: #252526;
+            border: 1px solid #3c3c3c;
+            border-radius: 6px;
+            padding: 20px;
+        }
+
+        .stat-card h3 {
+            color: #858585;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            color: #4ec9b0;
+            font-size: 32px;
+            font-weight: 600;
+        }
+
+        .card {
+            background: #252526;
+            border: 1px solid #3c3c3c;
+            border-radius: 6px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            color: #cccccc;
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #3c3c3c;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #3c3c3c;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: #858585;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            color: #4ec9b0;
+            border-bottom-color: #4ec9b0;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .btn {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+
+        .btn:hover {
+            background: #005a9e;
+        }
+
+        .btn-danger {
+            background: #c33;
+        }
+
+        .btn-danger:hover {
+            background: #a22;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #3c3c3c;
+        }
+
+        th {
+            color: #858585;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        td {
+            color: #cccccc;
+            font-size: 14px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .badge-admin {
+            background: #e8b84b;
+            color: #1e1e1e;
+        }
+
+        .badge-user {
+            background: #3c3c3c;
+            color: #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚗 AutoZQ AI Agent - 管理员仪表盘</h1>
+        <div class="user-info">
+            <span class="user-name" id="userName"></span>
+            <button class="btn-logout" onclick="logout()">退出登录</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>总用户数</h3>
+                <div class="stat-value" id="totalUsers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>管理员</h3>
+                <div class="stat-value" id="adminUsers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>普通用户</h3>
+                <div class="stat-value" id="regularUsers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>站点数量</h3>
+                <div class="stat-value" id="totalSites">-</div>
+            </div>
+        </div>
+
+        <!-- 管理面板 -->
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('users')">用户管理</button>
+                <button class="tab" onclick="switchTab('sites')">站点管理</button>
+                <button class="tab" onclick="switchTab('config')">API配置</button>
+            </div>
+
+            <!-- 用户管理 -->
+            <div id="users" class="tab-content active">
+                <button class="btn" onclick="showCreateUserModal()">➕ 添加用户</button>
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>邮箱</th>
+                            <th>角色</th>
+                            <th>站点权限</th>
+                            <th>最后登录</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr><td colspan="6" style="text-align:center; color:#858585;">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 站点管理 -->
+            <div id="sites" class="tab-content">
+                <button class="btn" onclick="showAddSiteModal()">➕ 添加站点</button>
+                <table id="sitesTable">
+                    <thead>
+                        <tr>
+                            <th>站点ID</th>
+                            <th>站点名称</th>
+                            <th>WordPress URL</th>
+                            <th>用户名</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sitesTableBody">
+                        <tr><td colspan="5" style="text-align:center; color:#858585;">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- API配置 -->
+            <div id="config" class="tab-content">
+                <div style="margin-bottom: 32px;">
+                    <h3 style="color: #cccccc; font-size: 16px; margin-bottom: 16px;">Claude API 配置</h3>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; color: #858585; font-size: 13px; margin-bottom: 6px;">API Base URL</label>
+                        <input type="text" id="claudeBaseUrl" style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3c3c3c; color: #cccccc; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; color: #858585; font-size: 13px; margin-bottom: 6px;">API Key</label>
+                        <input type="password" id="claudeApiKey" placeholder="留空则不修改" style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3c3c3c; color: #cccccc; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; color: #858585; font-size: 13px; margin-bottom: 6px;">Model</label>
+                        <input type="text" id="claudeModel" style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3c3c3c; color: #cccccc; border-radius: 4px;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 32px;">
+                    <h3 style="color: #cccccc; font-size: 16px; margin-bottom: 16px;">图片API 配置</h3>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; color: #858585; font-size: 13px; margin-bottom: 6px;">API Base URL</label>
+                        <input type="text" id="imageBaseUrl" style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3c3c3c; color: #cccccc; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; color: #858585; font-size: 13px; margin-bottom: 6px;">API Key</label>
+                        <input type="password" id="imageApiKey" placeholder="留空则不修改" style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3c3c3c; color: #cccccc; border-radius: 4px;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 32px;">
+                    <h3 style="color: #cccccc; font-size: 16px; margin-bottom: 16px;">代理配置</h3>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; color: #858585; font-size: 13px; margin-bottom: 6px;">HTTP Proxy</label>
+                        <input type="text" id="httpProxy" placeholder="例如: http://127.0.0.1:10808" style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3c3c3c; color: #cccccc; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; color: #858585; font-size: 13px; margin-bottom: 6px;">HTTPS Proxy</label>
+                        <input type="text" id="httpsProxy" placeholder="例如: http://127.0.0.1:10808" style="width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3c3c3c; color: #cccccc; border-radius: 4px;">
+                    </div>
+                </div>
+
+                <button class="btn" onclick="saveConfig()">💾 保存配置</button>
+                <p style="color: #e8b84b; font-size: 13px; margin-top: 12px;">⚠️ 保存后需要重启后端服务才能生效</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001';
+        let token = localStorage.getItem('token');
+        let currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+        // 检查登录状态
+        if (!token || currentUser.role !== 'admin') {
+            window.location.href = 'login.html';
+        }
+
+        // 显示用户名
+        document.getElementById('userName').textContent = `👤 ${currentUser.username}`;
+
+        // 切换标签
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // 加载统计信息
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('totalUsers').textContent = result.data.users.total;
+                    document.getElementById('adminUsers').textContent = result.data.users.admins;
+                    document.getElementById('regularUsers').textContent = result.data.users.regular;
+                    document.getElementById('totalSites').textContent = result.data.sites.total;
+                }
+            } catch (error) {
+                console.error('加载统计信息失败:', error);
+            }
+        }
+
+        // 加载用户列表
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/users`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    const tbody = document.getElementById('usersTableBody');
+                    tbody.innerHTML = result.data.map(user => `
+                        <tr>
+                            <td>${user.username}</td>
+                            <td>${user.email || '-'}</td>
+                            <td><span class="badge ${user.role === 'admin' ? 'badge-admin' : 'badge-user'}">${user.role === 'admin' ? '管理员' : '普通用户'}</span></td>
+                            <td>${(user.sites || []).join(', ') || '-'}</td>
+                            <td>${user.lastLogin ? new Date(user.lastLogin).toLocaleString('zh-CN') : '从未登录'}</td>
+                            <td>
+                                <button class="btn" style="font-size: 12px; padding: 6px 12px;" onclick="editUser('${user.id}')">编辑</button>
+                                ${user.id !== currentUser.id ? `<button class="btn btn-danger" style="font-size: 12px; padding: 6px 12px;" onclick="deleteUser('${user.id}')">删除</button>` : ''}
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('加载用户列表失败:', error);
+            }
+        }
+
+        // 页面加载完成后执行
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadUsers();
+            loadSites();
+            loadConfig();
+        });
+
+        // 加载站点列表
+        async function loadSites() {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/sites`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    const tbody = document.getElementById('sitesTableBody');
+                    tbody.innerHTML = result.data.map(site => `
+                        <tr>
+                            <td>${site.id}</td>
+                            <td>${site.name}</td>
+                            <td><a href="${site.wordpress.url}" target="_blank" style="color: #4ec9b0;">${site.wordpress.url}</a></td>
+                            <td>${site.wordpress.username}</td>
+                            <td>
+                                <button class="btn" style="font-size: 12px; padding: 6px 12px;" onclick="editSite('${site.id}')">编辑</button>
+                                <button class="btn btn-danger" style="font-size: 12px; padding: 6px 12px;" onclick="deleteSite('${site.id}')">删除</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('加载站点列表失败:', error);
+            }
+        }
+
+        // 加载API配置
+        async function loadConfig() {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/config`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('claudeBaseUrl').value = result.data.claude_api.base_url || '';
+                    document.getElementById('claudeModel').value = result.data.claude_api.model || '';
+                    document.getElementById('imageBaseUrl').value = result.data.image_api.base_url || '';
+                    document.getElementById('httpProxy').value = result.data.proxy.http || '';
+                    document.getElementById('httpsProxy').value = result.data.proxy.https || '';
+                }
+            } catch (error) {
+                console.error('加载配置失败:', error);
+            }
+        }
+
+        // 保存API配置
+        async function saveConfig() {
+            if (!confirm('确定要保存配置吗？\n\n保存后需要重启后端服务才能生效。')) {
+                return;
+            }
+
+            const config = {
+                claude_api: {
+                    base_url: document.getElementById('claudeBaseUrl').value,
+                    model: document.getElementById('claudeModel').value
+                },
+                image_api: {
+                    base_url: document.getElementById('imageBaseUrl').value
+                },
+                proxy: {
+                    http: document.getElementById('httpProxy').value,
+                    https: document.getElementById('httpsProxy').value
+                }
+            };
+
+            // 如果填写了API Key，则添加到配置中
+            const claudeApiKey = document.getElementById('claudeApiKey').value;
+            const imageApiKey = document.getElementById('imageApiKey').value;
+
+            if (claudeApiKey) {
+                config.claude_api.api_key = claudeApiKey;
+            }
+            if (imageApiKey) {
+                config.image_api.api_key = imageApiKey;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/config`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(config)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('✅ 配置已保存！\n\n请重启后端服务使配置生效。');
+                    // 清空密码字段
+                    document.getElementById('claudeApiKey').value = '';
+                    document.getElementById('imageApiKey').value = '';
+                } else {
+                    alert('❌ 保存失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('保存配置失败:', error);
+                alert('❌ 保存失败: ' + error.message);
+            }
+        }
+
+        // 添加站点
+        function showAddSiteModal() {
+            const siteId = prompt('站点ID (英文、数字、短横线):');
+            if (!siteId) return;
+
+            const siteName = prompt('站点名称:');
+            if (!siteName) return;
+
+            const wpUrl = prompt('WordPress URL (例如: https://example.com):');
+            if (!wpUrl) return;
+
+            const wpUsername = prompt('WordPress 用户名:');
+            if (!wpUsername) return;
+
+            const wpPassword = prompt('WordPress 应用程序密码:');
+            if (!wpPassword) return;
+
+            addSite({
+                id: siteId,
+                name: siteName,
+                wordpress: {
+                    url: wpUrl,
+                    username: wpUsername,
+                    app_password: wpPassword
+                }
+            });
+        }
+
+        async function addSite(siteData) {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/sites`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(siteData)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('✅ 站点添加成功！');
+                    loadSites();
+                    loadStats();
+                } else {
+                    alert('❌ 添加失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('添加站点失败:', error);
+                alert('❌ 添加失败: ' + error.message);
+            }
+        }
+
+        function editSite(id) {
+            alert('编辑站点功能开发中...\n\n暂时可以直接修改 backend/config/sites.json 文件');
+        }
+
+        function deleteSite(id) {
+            alert('删除站点功能开发中...\n\n暂时可以直接修改 backend/config/sites.json 文件');
+        }
+
+        // 临时提示
+        function showCreateUserModal() {
+            alert('添加用户功能开发中...\n\n暂时可以通过API直接调用:\nPOST /api/admin/users');
+        }
+
+        function editUser(id) {
+            alert('编辑用户功能开发中...');
+        }
+
+        function deleteUser(id) {
+            if (confirm('确定要删除这个用户吗？')) {
+                alert('删除功能开发中...');
+            }
+        }
+    </script>
+</body>
+</html>

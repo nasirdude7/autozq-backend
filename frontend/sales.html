@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoZQ 销售工作台</title>
+  <script src="/js/auth-guard.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+        'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: #f5f5f5;
+    }
+
+    .header {
+      background: #1a1a1a;
+      color: white;
+      padding: 20px 40px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .header p {
+      margin-top: 5px;
+      color: #999;
+      font-size: 14px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .stat-card h3 {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    .stat-card .number {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 5px;
+    }
+
+    .stat-card .change {
+      font-size: 12px;
+      color: #52c41a;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      padding: 25px;
+    }
+
+    .card h2 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #1a1a1a;
+      font-weight: 600;
+    }
+
+    .customer-list {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .customer-item {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .customer-item:hover {
+      background: #fafafa;
+    }
+
+    .customer-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 18px;
+      margin-right: 15px;
+    }
+
+    .customer-info {
+      flex: 1;
+    }
+
+    .customer-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+
+    .customer-detail {
+      font-size: 13px;
+      color: #999;
+    }
+
+    .rating {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .rating-A {
+      background: #f6ffed;
+      color: #52c41a;
+      border: 1px solid #b7eb8f;
+    }
+
+    .rating-B {
+      background: #e6f7ff;
+      color: #1890ff;
+      border: 1px solid #91d5ff;
+    }
+
+    .rating-C {
+      background: #fff7e6;
+      color: #fa8c16;
+      border: 1px solid #ffd591;
+    }
+
+    .rating-D {
+      background: #fff1f0;
+      color: #f5222d;
+      border: 1px solid #ffa39e;
+    }
+
+    .test-section {
+      margin-top: 20px;
+      padding: 20px;
+      background: #fafafa;
+      border-radius: 8px;
+    }
+
+    .test-section h3 {
+      font-size: 14px;
+      margin-bottom: 15px;
+      color: #666;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .input-group input,
+    .input-group textarea,
+    .input-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .input-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      background: #1a1a1a;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #333;
+    }
+
+    .btn-success {
+      background: #52c41a;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #73d13d;
+    }
+
+    .result {
+      margin-top: 15px;
+      padding: 15px;
+      background: white;
+      border-radius: 4px;
+      border: 1px solid #d9d9d9;
+      font-size: 13px;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .loading {
+      color: #1890ff;
+      font-style: italic;
+    }
+
+    .error {
+      color: #f5222d;
+    }
+
+    .success {
+      color: #52c41a;
+    }
+
+    .status-online {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #52c41a;
+      margin-left: 10px;
+    }
+
+    .status-offline {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #d9d9d9;
+      margin-left: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>🚗 AutoZQ 销售工作台</h1>
+      <p>汽车外贸销售管理系统 <span id="api-status" class="status-offline"></span></p>
+    </div>
+    <div style="display: flex; gap: 15px;">
+      <a href="sales-dashboard.html" style="color: white; text-decoration: none; padding: 8px 16px; background: #555; border-radius: 4px;">📊 仪表板</a>
+      <a href="chat-interface.html" style="color: white; text-decoration: none; padding: 8px 16px; background: #333; border-radius: 4px;">💬 聊天</a>
+      <a href="analytics-dashboard.html" style="color: white; text-decoration: none; padding: 8px 16px; background: #333; border-radius: 4px;">📈 分析</a>
+      <a href="advanced-search.html" style="color: white; text-decoration: none; padding: 8px 16px; background: #333; border-radius: 4px;">🔍 搜索</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- 统计卡片 -->
+    <div class="stats">
+      <div class="stat-card">
+        <h3>总客户数</h3>
+        <div class="number" id="total-customers">-</div>
+        <div class="change">加载中...</div>
+      </div>
+      <div class="stat-card">
+        <h3>活跃会话</h3>
+        <div class="number" id="active-conversations">-</div>
+        <div class="change">实时更新</div>
+      </div>
+      <div class="stat-card">
+        <h3>今日消息</h3>
+        <div class="number" id="today-messages">-</div>
+        <div class="change">自动统计</div>
+      </div>
+      <div class="stat-card">
+        <h3>新客户</h3>
+        <div class="number" id="new-customers">-</div>
+        <div class="change">今天新增</div>
+      </div>
+    </div>
+
+    <!-- 主要内容 -->
+    <div class="main-content">
+      <!-- 客户列表 -->
+      <div class="card">
+        <h2>📋 客户列表</h2>
+        <div class="customer-list" id="customer-list">
+          <p style="text-align: center; color: #999; padding: 40px;">加载中...</p>
+        </div>
+      </div>
+
+      <!-- AI 测试工具 -->
+      <div class="card">
+        <h2>🤖 AI 功能测试</h2>
+
+        <div class="test-section">
+          <h3>1. AI 翻译测试</h3>
+          <div class="input-group">
+            <label>输入文本：</label>
+            <textarea id="translate-text" placeholder="输入要翻译的文本...">我想买一辆丰田汽车</textarea>
+          </div>
+          <div class="input-group">
+            <label>目标语言：</label>
+            <select id="target-lang">
+              <option value="en">英语</option>
+              <option value="ru" selected>俄语</option>
+              <option value="ar">阿拉伯语</option>
+              <option value="es">西班牙语</option>
+              <option value="fr">法语</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="testTranslate()">🌐 翻译</button>
+          <div id="translate-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+          <h3>2. 创建客户测试</h3>
+          <div class="input-group">
+            <label>客户姓名：</label>
+            <input type="text" id="customer-name" placeholder="例如：Ivan Petrov">
+          </div>
+          <div class="input-group">
+            <label>电话号码：</label>
+            <input type="text" id="customer-phone" placeholder="例如：+7-900-123-4567">
+          </div>
+          <div class="input-group">
+            <label>国家：</label>
+            <input type="text" id="customer-country" placeholder="例如：Russia" value="Russia">
+          </div>
+          <button class="btn btn-success" onclick="createCustomer()">➕ 创建客户</button>
+          <div id="customer-result" class="result" style="display: none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // API 基础地址
+    const API_BASE = (window.API_BASE || window.location.origin) + '/api/sales';
+
+    // 检查 API 连接状态
+    async function checkAPIStatus() {
+      try {
+        const response = await authFetch(window.API_BASE || window.location.origin);
+        if (response.ok) {
+          document.getElementById('api-status').className = 'status-online';
+          return true;
+        }
+      } catch (error) {
+        document.getElementById('api-status').className = 'status-offline';
+        console.error('API 连接失败:', error);
+        return false;
+      }
+    }
+
+    // 加载统计数据
+    async function loadStats() {
+      try {
+        const response = await authFetch(`${API_BASE}/stats/realtime`);
+        const data = await response.json();
+
+        if (data.success) {
+          document.getElementById('active-conversations').textContent = data.data.active_conversations || 0;
+          document.getElementById('today-messages').textContent = data.data.messages_today || 0;
+          document.getElementById('new-customers').textContent = data.data.new_customers_today || 0;
+        }
+      } catch (error) {
+        console.error('加载统计数据失败:', error);
+      }
+    }
+
+    // 加载客户列表
+    async function loadCustomers() {
+      try {
+        const response = await authFetch(`${API_BASE}/customers?limit=20`);
+        const data = await response.json();
+
+        if (data.success && data.data.length > 0) {
+          document.getElementById('total-customers').textContent = data.pagination.total || 0;
+
+          const customerList = document.getElementById('customer-list');
+          customerList.innerHTML = '';
+
+          data.data.forEach(customer => {
+            const initial = customer.name ? customer.name[0].toUpperCase() : '?';
+            const rating = customer.rating || 'C';
+
+            customerList.innerHTML += `
+              <div class="customer-item" onclick="window.location.href='customer-detail.html?id=${customer.id}'">
+                <div class="customer-avatar">${initial}</div>
+                <div class="customer-info">
+                  <div class="customer-name">${customer.name || '未命名'}</div>
+                  <div class="customer-detail">
+                    ${customer.phone || '无电话'} · ${customer.country || '未知国家'}
+                  </div>
+                </div>
+                <span class="rating rating-${rating}">${rating}级</span>
+              </div>
+            `;
+          });
+        } else {
+          document.getElementById('customer-list').innerHTML =
+            '<p style="text-align: center; color: #999; padding: 40px;">暂无客户数据<br><small>使用下方工具创建第一个客户</small></p>';
+          document.getElementById('total-customers').textContent = '0';
+        }
+      } catch (error) {
+        console.error('加载客户列表失败:', error);
+        document.getElementById('customer-list').innerHTML =
+          '<p style="text-align: center; color: #f5222d; padding: 40px;">❌ 加载失败<br><small>请确保后端服务已启动</small></p>';
+      }
+    }
+
+    // AI 翻译测试
+    async function testTranslate() {
+      const text = document.getElementById('translate-text').value;
+      const targetLang = document.getElementById('target-lang').value;
+      const resultDiv = document.getElementById('translate-result');
+
+      if (!text.trim()) {
+        alert('请输入要翻译的文本');
+        return;
+      }
+
+      resultDiv.style.display = 'block';
+      resultDiv.className = 'result loading';
+      resultDiv.textContent = '🔄 AI 翻译中...';
+
+      try {
+        const response = await authFetch(`${API_BASE}/chat/translate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            target_language: targetLang
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          resultDiv.className = 'result success';
+          resultDiv.textContent = `✅ 翻译成功！\n\n原文：${data.original}\n\n译文：${data.translated}\n\n模型：${data.model}`;
+        } else {
+          resultDiv.className = 'result error';
+          resultDiv.textContent = `❌ 翻译失败：${data.error}`;
+        }
+      } catch (error) {
+        resultDiv.className = 'result error';
+        resultDiv.textContent = `❌ 请求失败：${error.message}\n\n提示：请确保后端服务已启动且配置了 ANTHROPIC_API_KEY`;
+      }
+    }
+
+    // 创建客户测试
+    async function createCustomer() {
+      const name = document.getElementById('customer-name').value;
+      const phone = document.getElementById('customer-phone').value;
+      const country = document.getElementById('customer-country').value;
+      const resultDiv = document.getElementById('customer-result');
+
+      if (!name || !phone) {
+        alert('请填写客户姓名和电话');
+        return;
+      }
+
+      resultDiv.style.display = 'block';
+      resultDiv.className = 'result loading';
+      resultDiv.textContent = '⏳ 创建中...';
+
+      try {
+        const response = await authFetch(`${API_BASE}/customers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name,
+            phone: phone,
+            country: country,
+            language: 'ru',
+            source: 'manual'
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          resultDiv.className = 'result success';
+          resultDiv.textContent = `✅ 客户创建成功！\n\nID: ${data.data.id}\n姓名: ${data.data.name}\n电话: ${data.data.phone}\n创建时间: ${data.data.created_at}`;
+
+          // 刷新客户列表
+          setTimeout(() => {
+            loadCustomers();
+            loadStats();
+          }, 500);
+
+          // 清空表单
+          document.getElementById('customer-name').value = '';
+          document.getElementById('customer-phone').value = '';
+        } else {
+          resultDiv.className = 'result error';
+          resultDiv.textContent = `❌ 创建失败：${data.error}`;
+        }
+      } catch (error) {
+        resultDiv.className = 'result error';
+        resultDiv.textContent = `❌ 请求失败：${error.message}`;
+      }
+    }
+
+    // 页面加载时执行
+    window.onload = async function() {
+      console.log('🚀 AutoZQ 销售工作台加载中...');
+
+      // 检查 API 状态
+      const apiOk = await checkAPIStatus();
+
+      if (apiOk) {
+        console.log('✅ API 连接成功');
+        // 加载数据
+        loadCustomers();
+        loadStats();
+
+        // 每30秒刷新统计数据
+        setInterval(loadStats, 30000);
+      } else {
+        console.error('❌ API 连接失败，请确保后端服务已启动');
+        alert('⚠️ 无法连接到后端服务\n\n请确保：\n1. 后端服务已启动\n2. 网络连接正常\n3. 已正确登录');
+      }
+    };
+  </script>
+</body>
+</html>

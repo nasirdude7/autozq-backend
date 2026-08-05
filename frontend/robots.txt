@@ -1,0 +1,44 @@
+User-agent: *
+Allow: /
+
+# Allow AI search crawlers for citation and visibility
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+# Block training-only crawlers (but allow search crawlers above)
+User-agent: CCBot
+Disallow: /
+
+User-agent: scrapy
+Disallow: /
+
+# Sitemap
+Sitemap: https://autozq.ru/sitemap.xml
+
+# AI-readable files
+# These files help AI systems understand our business
+Allow: /llms.txt
+Allow: /llms-ru.txt
+Allow: /pricing.md
+Allow: /okf/

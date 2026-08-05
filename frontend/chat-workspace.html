@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoZQ 聊天工作台</title>
+    <script src="/js/auth-guard.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 300px 1fr 400px;
+            height: calc(100vh - 60px);
+            gap: 0;
+        }
+
+        /* 左侧客户列表 */
+        .customer-sidebar {
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+        }
+
+        .customer-search {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .customer-search input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .customer-item {
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .customer-item:hover {
+            background: #f8f9fa;
+        }
+
+        .customer-item.active {
+            background: #e3f2fd;
+            border-left: 3px solid #3498db;
+        }
+
+        .customer-item h4 {
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+            color: #2c3e50;
+        }
+
+        .customer-item p {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+
+        .customer-meta {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        /* 中间聊天区域 */
+        .chat-area {
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+        }
+
+        .chat-header {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .message.customer {
+            justify-content: flex-start;
+        }
+
+        .message.agent {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+
+        .message.customer .message-bubble {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+        }
+
+        .message.agent .message-bubble {
+            background: #3498db;
+            color: white;
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 0.25rem;
+        }
+
+        .chat-input-area {
+            padding: 1rem;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+        }
+
+        .chat-input-box {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input-box textarea {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: none;
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+
+        .chat-input-box button {
+            padding: 0.75rem 1.5rem;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .chat-input-box button:hover {
+            background: #2980b9;
+        }
+
+        .chat-input-box button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .translate-btn {
+            background: #17a2b8 !important;
+            padding: 0.75rem 1rem !important;
+        }
+
+        .translate-btn:hover {
+            background: #138496 !important;
+        }
+
+        .translate-panel {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .translate-panel.show {
+            display: block;
+        }
+
+        .translate-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .translate-controls select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .translate-controls button {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            background: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .translate-controls button:hover {
+            background: #138496;
+        }
+
+        .translate-result {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 4px;
+            border-left: 3px solid #17a2b8;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .translate-result strong {
+            display: block;
+            margin-bottom: 0.25rem;
+            color: #17a2b8;
+            font-size: 0.85rem;
+        }
+
+        .translate-use-btn {
+            margin-top: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .translate-use-btn:hover {
+            background: #218838;
+        }
+
+        /* 右侧AI建议面板 */
+        .ai-suggestion-panel {
+            background: white;
+            border-left: 1px solid #e0e0e0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .panel-header h3 {
+            font-size: 1rem;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .intent-analysis {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            background: #fff3cd;
+        }
+
+        .intent-analysis h4 {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: #856404;
+        }
+
+        .intent-item {
+            font-size: 0.85rem;
+            margin: 0.25rem 0;
+            color: #856404;
+        }
+
+        .intent-item strong {
+            color: #533f03;
+        }
+
+        .suggestions-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .suggestion-card {
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .suggestion-card:hover {
+            background: #f8f9fa;
+        }
+
+        .suggestion-label {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .suggestion-text {
+            font-size: 0.9rem;
+            color: #2c3e50;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .suggestion-reason {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            font-style: italic;
+            background: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+        }
+
+        .use-suggestion-btn {
+            width: 100%;
+            padding: 0.5rem;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: background 0.2s;
+        }
+
+        .use-suggestion-btn:hover {
+            background: #218838;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge.rating-A { background: #d4edda; color: #155724; }
+        .badge.rating-B { background: #d1ecf1; color: #0c5460; }
+        .badge.rating-C { background: #fff3cd; color: #856404; }
+        .badge.rating-D { background: #f8d7da; color: #721c24; }
+
+        .badge.intent-pricing { background: #ffeaa7; color: #d63031; }
+        .badge.intent-inquiry { background: #74b9ff; color: #0984e3; }
+        .badge.intent-complaint { background: #fab1a0; color: #d63031; }
+        .badge.intent-order { background: #55efc4; color: #00b894; }
+
+        .translate-toggle {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: #3498db;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .translate-toggle:hover {
+            color: #2980b9;
+        }
+
+        .quick-replies {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f8f9fa;
+        }
+
+        .quick-replies h4 {
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+
+        .quick-reply-btn {
+            display: inline-block;
+            padding: 0.4rem 0.75rem;
+            margin: 0.25rem;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-reply-btn:hover {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .translated-text {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: #f0f8ff;
+            border-left: 3px solid #3498db;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .badge.sentiment-positive { background: #d4edda; color: #155724; }
+        .badge.sentiment-neutral { background: #d1ecf1; color: #0c5460; }
+        .badge.sentiment-negative { background: #f8d7da; color: #721c24; }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #7f8c8d;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #7f8c8d;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>💬 AutoZQ 聊天工作台 - AI智能助手</h1>
+    </div>
+
+    <div class="workspace">
+        <!-- 左侧：客户列表 -->
+        <div class="customer-sidebar">
+            <div class="customer-search">
+                <input type="text" placeholder="🔍 搜索客户..." id="customerSearch">
+            </div>
+            <div id="customerList">
+                <div class="loading">加载客户列表...</div>
+            </div>
+        </div>
+
+        <!-- 中间：聊天区域 -->
+        <div class="chat-area">
+            <div class="chat-header">
+                <div>
+                    <h3 id="currentCustomerName">选择一个客户开始聊天</h3>
+                    <div id="currentCustomerMeta"></div>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="empty-state">
+                    <div class="empty-state-icon">💬</div>
+                    <p>选择左侧客户开始对话</p>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <div class="chat-input-box">
+                    <textarea
+                        id="messageInput"
+                        placeholder="输入消息..."
+                        rows="3"
+                        disabled
+                    ></textarea>
+                    <button onclick="toggleTranslate()" id="translateToggleBtn" class="translate-btn" disabled>🌐 翻译</button>
+                    <button onclick="sendMessage()" id="sendBtn" disabled>发送</button>
+                </div>
+
+                <!-- 翻译面板 -->
+                <div class="translate-panel" id="translatePanel">
+                    <div class="translate-controls">
+                        <label style="font-size: 0.875rem; color: #555;">翻译为：</label>
+                        <select id="translateTargetLang">
+                            <option value="en">英语 (English)</option>
+                            <option value="ru">俄语 (Русский)</option>
+                            <option value="ar">阿拉伯语 (العربية)</option>
+                            <option value="es">西班牙语 (Español)</option>
+                            <option value="zh">中文 (Chinese)</option>
+                        </select>
+                        <button onclick="translateMessage()">立即翻译</button>
+                    </div>
+                    <div id="translateResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：AI建议面板 -->
+        <div class="ai-suggestion-panel">
+            <div class="panel-header">
+                <h3>🤖 AI 智能助手</h3>
+            </div>
+
+            <div id="intentAnalysis" style="display: none;">
+                <!-- 客户意图分析 -->
+            </div>
+
+            <div class="quick-replies" id="quickReplies">
+                <h4>⚡ 快捷回复</h4>
+                <div class="quick-reply-btn" onclick="useQuickReply('你好！有什么可以帮您的？')">
+                    👋 你好
+                </div>
+                <div class="quick-reply-btn" onclick="useQuickReply('感谢您的咨询，我这就为您查询信息。')">
+                    🔍 正在查询
+                </div>
+                <div class="quick-reply-btn" onclick="useQuickReply('我会尽快为您提供报价。')">
+                    💰 稍后报价
+                </div>
+                <div class="quick-reply-btn" onclick="useQuickReply('这款车我们有现货。')">
+                    ✅ 有现货
+                </div>
+                <div class="quick-reply-btn" onclick="useQuickReply('抱歉，请允许我确认一下这个信息。')">
+                    ⏳ 确认中
+                </div>
+            </div>
+
+            <div class="suggestions-list" id="suggestionsList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🎯</div>
+                    <p>选择客户后，AI 将实时分析<br>并提供回复建议</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.API_BASE || window.location.origin;
+        let currentCustomerId = null;
+        let currentConversationId = null;
+        let currentCustomerLanguage = 'zh'; // 当前客户语言
+        let currentCustomerCountry = ''; // 当前客户国家
+        let messageHistory = [];
+        let messagePollingInterval = null;
+        let lastMessageId = null;
+
+        // 快捷回复模板（多语言）
+        const quickReplies = {
+            zh: [
+                { icon: '👋', label: '你好', text: '你好！有什么可以帮您的？' },
+                { icon: '🔍', label: '正在查询', text: '感谢您的咨询，我这就为您查询信息。' },
+                { icon: '💰', label: '稍后报价', text: '我会尽快为您提供报价。' },
+                { icon: '✅', label: '有现货', text: '这款车我们有现货。' },
+                { icon: '⏳', label: '确认中', text: '抱歉，请允许我确认一下这个信息。' }
+            ],
+            en: [
+                { icon: '👋', label: 'Hello', text: 'Hello! How can I help you?' },
+                { icon: '🔍', label: 'Checking', text: 'Thank you for your inquiry. Let me check the information.' },
+                { icon: '💰', label: 'Quote', text: 'I will send you a quote shortly.' },
+                { icon: '✅', label: 'In Stock', text: 'We have this car in stock.' },
+                { icon: '⏳', label: 'Confirming', text: 'Sorry, let me confirm this information.' }
+            ],
+            ru: [
+                { icon: '👋', label: 'Привет', text: 'Здравствуйте! Чем могу помочь?' },
+                { icon: '🔍', label: 'Проверяю', text: 'Спасибо за ваш вопрос. Сейчас проверю информацию.' },
+                { icon: '💰', label: 'Цена', text: 'Я отправлю вам цену в ближайшее время.' },
+                { icon: '✅', label: 'В наличии', text: 'У нас есть этот автомобиль в наличии.' },
+                { icon: '⏳', label: 'Уточняю', text: 'Извините, я уточню эту информацию.' }
+            ],
+            ar: [
+                { icon: '👋', label: 'مرحبا', text: 'مرحبا! كيف يمكنني مساعدتك؟' },
+                { icon: '🔍', label: 'جاري التحقق', text: 'شكرا على استفسارك. دعني أتحقق من المعلومات.' },
+                { icon: '💰', label: 'عرض السعر', text: 'سأرسل لك عرض السعر قريبا.' },
+                { icon: '✅', label: 'متوفر', text: 'لدينا هذه السيارة في المخزون.' },
+                { icon: '⏳', label: 'تأكيد', text: 'عذرا، دعني أؤكد هذه المعلومات.' }
+            ],
+            es: [
+                { icon: '👋', label: 'Hola', text: '¡Hola! ¿Cómo puedo ayudarte?' },
+                { icon: '🔍', label: 'Verificando', text: 'Gracias por tu consulta. Déjame verificar la información.' },
+                { icon: '💰', label: 'Cotización', text: 'Te enviaré una cotización pronto.' },
+                { icon: '✅', label: 'En Stock', text: 'Tenemos este auto en stock.' },
+                { icon: '⏳', label: 'Confirmando', text: 'Lo siento, déjame confirmar esta información.' }
+            ]
+        };
+
+        // 更新快捷回复按钮（根据客户语言）
+        function updateQuickReplies(language = 'zh') {
+            const container = document.getElementById('quickReplies');
+            const replies = quickReplies[language] || quickReplies['zh'];
+
+            const languageNames = {
+                zh: '中文', en: 'English', ru: 'Русский', ar: 'العربية', es: 'Español'
+            };
+
+            container.innerHTML = `
+                <h4>⚡ 快捷回复 (${languageNames[language] || '中文'})</h4>
+                ${replies.map(r => `
+                    <div class="quick-reply-btn" onclick="useQuickReply('${r.text.replace(/'/g, "\\'")}')">
+                        ${r.icon} ${r.label}
+                    </div>
+                `).join('')}
+            `;
+        }
+        async function loadCustomers() {
+            try {
+                const res = await authFetch(`${API_BASE}/api/sales/customers?limit=50`);
+                const data = await res.json();
+
+                const container = document.getElementById('customerList');
+
+                if (data.success && data.data.length > 0) {
+                    container.innerHTML = data.data.map(c => `
+                        <div class="customer-item"
+                             data-customer-id="${c.id}"
+                             data-rating="${c.rating || 'C'}">
+                            <h4>${c.name || '未命名'}</h4>
+                            <p>${c.country || '未知'} · ${c.source || 'WhatsApp'}</p>
+                            <div class="customer-meta">
+                                <span class="badge rating-${c.rating || 'C'}">${c.rating || 'C'}级</span>
+                                <span class="badge" style="background:#e0e0e0;color:#555">${c.whatsapp_number || '无号码'}</span>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    // 使用事件委托绑定点击事件
+                    container.querySelectorAll('.customer-item').forEach((item, index) => {
+                        const customer = data.data[index];
+                        item.addEventListener('click', function() {
+                            selectCustomer(customer.id, customer.name, customer.rating || 'C', this);
+                        });
+                    });
+                } else {
+                    container.innerHTML = '<div class="loading">暂无客户</div>';
+                }
+            } catch (err) {
+                console.error('加载客户失败:', err);
+            }
+        }
+
+        // 从元素选择客户（新增辅助函数）
+        function selectCustomerFromElement(element) {
+            const customerId = element.getAttribute('data-customer-id');
+            const customerName = element.getAttribute('data-customer-name');
+            const rating = element.getAttribute('data-customer-rating');
+            selectCustomer(customerId, customerName, rating);
+        }
+
+        // 选择客户
+        async function selectCustomer(customerId, customerName, rating, element) {
+            console.log('selectCustomer 被调用:', { customerId, customerName, rating });
+
+            currentCustomerId = customerId;
+
+            // 停止之前的轮询
+            if (messagePollingInterval) {
+                clearInterval(messagePollingInterval);
+            }
+
+            // 获取客户详情（包括语言和国家）
+            try {
+                const customerRes = await authFetch(`${API_BASE}/api/sales/customers/${customerId}`);
+                const customerData = await customerRes.json();
+                if (customerData.success) {
+                    currentCustomerLanguage = customerData.data.language || 'zh';
+                    currentCustomerCountry = customerData.data.country || '';
+                    // 更新快捷回复语言
+                    updateQuickReplies(currentCustomerLanguage);
+                }
+            } catch (err) {
+                console.error('获取客户详情失败:', err);
+            }
+
+            // 更新激活状态
+            document.querySelectorAll('.customer-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            if (element) {
+                element.classList.add('active');
+            }
+
+            // 更新聊天头部
+            document.getElementById('currentCustomerName').textContent = customerName;
+            document.getElementById('currentCustomerMeta').innerHTML = `
+                <span class="badge rating-${rating}">${rating}级客户</span>
+                ${currentCustomerCountry ? `<span class="badge" style="background:#e0e0e0;color:#555">${currentCustomerCountry}</span>` : ''}
+            `;
+
+            // 启用输入框
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('translateToggleBtn').disabled = false;
+
+            // 加载聊天历史
+            await loadChatHistory(customerId);
+
+            // 启动消息轮询（每3秒检查新消息）
+            messagePollingInterval = setInterval(() => {
+                pollNewMessages(currentConversationId);
+            }, 3000);
+        }
+
+        // 加载聊天历史
+        async function loadChatHistory(customerId) {
+            try {
+                console.log('🔍 查询客户会话:', customerId);
+                const res = await authFetch(`${API_BASE}/api/sales/chat/conversations?customer_id=${customerId}`);
+                const data = await res.json();
+
+                const messagesContainer = document.getElementById('chatMessages');
+                let conversation = null;
+
+                if (data.success && data.data.length > 0) {
+                    conversation = data.data[0];
+                    console.log('✅ 找到会话:', conversation.id);
+                } else {
+                    // 没有会话，创建新会话
+                    console.log('📝 创建新会话...');
+                    const createRes = await authFetch(`${API_BASE}/api/sales/chat/conversations`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            customer_id: customerId,
+                            platform: 'whatsapp'
+                        })
+                    });
+                    const createData = await createRes.json();
+                    if (createData.success) {
+                        conversation = createData.data;
+                        console.log('✅ 会话创建成功:', conversation.id);
+                    }
+                }
+
+                if (conversation) {
+                    currentConversationId = conversation.id;
+
+                    // 获取消息历史
+                    const msgRes = await authFetch(`${API_BASE}/api/sales/chat/conversations/${conversation.id}/messages`);
+                    const msgData = await msgRes.json();
+
+                    if (msgData.success && msgData.data.length > 0) {
+                        messageHistory = msgData.data;
+                        lastMessageId = msgData.data[msgData.data.length - 1].id;
+                        renderMessages(msgData.data);
+
+                        // 获取最后一条客户消息并分析
+                        const lastCustomerMsg = msgData.data.filter(m => m.sender_type === 'customer').pop();
+                        if (lastCustomerMsg) {
+                            await analyzeAndSuggest(lastCustomerMsg.content);
+                        }
+                    } else {
+                        messagesContainer.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💬</div><p>暂无消息，开始新对话吧</p></div>';
+                    }
+                } else {
+                    messagesContainer.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>无法创建会话</p></div>';
+                }
+            } catch (err) {
+                console.error('❌ 加载聊天历史失败:', err);
+                document.getElementById('chatMessages').innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>加载失败，请刷新重试</p></div>';
+            }
+        }
+
+        // 渲染消息
+        function renderMessages(messages) {
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = messages.map(msg => `
+                <div class="message ${msg.sender_type === 'customer' ? 'customer' : 'agent'}">
+                    <div class="message-bubble">
+                        ${msg.content}
+                        <div class="message-time">${new Date(msg.created_at).toLocaleString('zh-CN')}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // 滚动到底部
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 分析客户意图并生成建议
+        async function analyzeAndSuggest(customerMessage) {
+            // 1. 分析客户意图
+            try {
+                const intentRes = await authFetch(`${API_BASE}/api/sales/chat/analyze-intent`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: customerMessage,
+                        conversation_history: messageHistory.slice(-5)
+                    })
+                });
+
+                const intentData = await intentRes.json();
+
+                if (intentData.success) {
+                    displayIntentAnalysis(intentData);
+                }
+            } catch (err) {
+                console.error('意图分析失败:', err);
+            }
+
+            // 2. 获取AI建议回复
+            try {
+                const suggestRes = await authFetch(`${API_BASE}/api/sales/knowledge/recommend-reply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: customerMessage,
+                        conversation_history: messageHistory.slice(-5).map(m => ({
+                            role: m.direction === 'incoming' ? 'customer' : 'agent',
+                            content: m.content
+                        }))
+                    })
+                });
+
+                const suggestData = await suggestRes.json();
+
+                if (suggestData.success) {
+                    displaySuggestions(suggestData.suggestions);
+                }
+            } catch (err) {
+                console.error('获取建议失败:', err);
+            }
+        }
+
+        // 显示意图分析
+        function displayIntentAnalysis(data) {
+            const container = document.getElementById('intentAnalysis');
+            container.style.display = 'block';
+
+            const intentLabels = {
+                'inquiry': '咨询了解',
+                'pricing': '询价报价',
+                'negotiation': '议价谈判',
+                'complaint': '投诉问题',
+                'order': '下单购买',
+                'other': '其他'
+            };
+
+            const sentimentLabels = {
+                'positive': '积极😊',
+                'neutral': '中性😐',
+                'negative': '消极😞'
+            };
+
+            const urgencyLabels = {
+                'high': '高🔴',
+                'medium': '中🟡',
+                'low': '低🟢'
+            };
+
+            container.innerHTML = `
+                <h4>📊 客户意图分析</h4>
+                <div class="intent-item"><strong>意图类型：</strong><span class="badge intent-${data.intent}">${intentLabels[data.intent] || data.intent}</span></div>
+                <div class="intent-item"><strong>情绪状态：</strong><span class="badge sentiment-${data.sentiment}">${sentimentLabels[data.sentiment] || data.sentiment}</span></div>
+                <div class="intent-item"><strong>紧急程度：</strong>${urgencyLabels[data.urgency] || data.urgency}</div>
+                <div class="intent-item"><strong>置信度：</strong>${Math.round(data.confidence * 100)}%</div>
+                ${data.summary ? `<div class="intent-item" style="margin-top:0.5rem"><strong>总结：</strong>${data.summary}</div>` : ''}
+            `;
+        }
+
+        // 显示AI建议
+        async function displaySuggestions(suggestions) {
+            const container = document.getElementById('suggestionsList');
+
+            if (!suggestions || suggestions.length === 0) {
+                container.innerHTML = '<div class="loading">暂无建议</div>';
+                return;
+            }
+
+            // 为每个建议生成卡片
+            const suggestionCards = await Promise.all(suggestions.map(async (sug, index) => {
+                let translatedReply = '';
+                const targetLang = currentCustomerLanguage || 'en';
+
+                // 如果回复是中文且客户语言不是中文，自动翻译
+                if (/[一-龥]/.test(sug.reply) && targetLang !== 'zh') {
+                    try {
+                        const transRes = await authFetch(`${API_BASE}/api/sales/chat/translate`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                text: sug.reply,
+                                target_language: targetLang
+                            })
+                        });
+                        const transData = await transRes.json();
+                        if (transData.success) {
+                            translatedReply = transData.translated;
+                        }
+                    } catch (err) {
+                        console.error('翻译失败:', err);
+                    }
+                }
+
+                const languageIcons = {
+                    zh: '🇨🇳', en: '🇬🇧', ru: '🇷🇺', ar: '🇸🇦', es: '🇪🇸', fr: '🇫🇷', de: '🇩🇪', ja: '🇯🇵', ko: '🇰🇷'
+                };
+
+                return `
+                    <div class="suggestion-card">
+                        <div class="suggestion-label">
+                            💡 建议回复 ${index + 1}
+                            ${sug.confidence ? `<span class="badge" style="background:#e0e0e0;color:#555">匹配度${Math.round(sug.confidence * 100)}%</span>` : ''}
+                        </div>
+                        <div class="suggestion-text">${sug.reply}</div>
+                        ${translatedReply ? `
+                            <div class="translated-text">
+                                ${languageIcons[targetLang] || '🌐'} 客户语言: ${translatedReply}
+                            </div>
+                        ` : ''}
+                        ${sug.reason ? `<div class="suggestion-reason">💭 推荐理由: ${sug.reason}</div>` : ''}
+                        <button class="use-suggestion-btn" onclick="useSuggestion(\`${(translatedReply || sug.reply).replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)">
+                            ✅ 使用此回复
+                        </button>
+                    </div>
+                `;
+            }));
+
+            container.innerHTML = suggestionCards.join('');
+        }
+
+        // 轮询新消息
+        async function pollNewMessages(conversationId) {
+            if (!conversationId) return;
+
+            try {
+                const res = await authFetch(`${API_BASE}/api/sales/chat/conversations/${conversationId}/messages`);
+                const data = await res.json();
+
+                if (data.success && data.data.length > 0) {
+                    // 检查是否有新消息
+                    const latestMessage = data.data[data.data.length - 1];
+                    if (lastMessageId && latestMessage.id !== lastMessageId) {
+                        messageHistory = data.data;
+                        renderMessages(data.data);
+
+                        // 如果是客户发的新消息，触发AI分析
+                        if (latestMessage.sender_type === 'customer') {
+                            await analyzeAndSuggest(latestMessage.content);
+                        }
+                    }
+                    lastMessageId = latestMessage.id;
+                }
+            } catch (err) {
+                console.error('轮询消息失败:', err);
+            }
+        }
+
+        // 使用快捷回复
+        function useQuickReply(text) {
+            document.getElementById('messageInput').value = text;
+            document.getElementById('messageInput').focus();
+        }
+
+        // 使用建议回复
+        function useSuggestion(text) {
+            document.getElementById('messageInput').value = text;
+            document.getElementById('messageInput').focus();
+        }
+
+        // 发送消息
+        async function sendMessage() {
+            console.log('🔍 sendMessage 被调用');
+
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            const btn = document.getElementById('sendBtn');
+
+            console.log('📝 消息内容:', content);
+            console.log('👤 当前客户ID:', currentCustomerId);
+            console.log('💬 当前会话ID:', currentConversationId);
+
+            if (!content || !currentCustomerId || !currentConversationId) {
+                console.warn('⚠️ 缺少必要信息，无法发送');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '翻译并发送...';
+
+            try {
+                let finalContent = content;
+
+                // 如果客户语言不是中文，自动翻译
+                if (currentCustomerLanguage && currentCustomerLanguage !== 'zh') {
+                    console.log(`🌐 自动翻译中文到 ${currentCustomerLanguage}...`);
+
+                    try {
+                        const translateRes = await authFetch(`${API_BASE}/api/sales/chat/translate`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                text: content,
+                                target_language: currentCustomerLanguage,
+                                source_language: 'zh'
+                            })
+                        });
+
+                        const translateData = await translateRes.json();
+
+                        if (translateData.success && translateData.translated) {
+                            finalContent = translateData.translated;
+                            console.log(`✅ 翻译成功: ${content} → ${finalContent}`);
+                        } else {
+                            console.warn('⚠️ 翻译失败，使用原文发送:', translateData.error);
+                        }
+                    } catch (translateErr) {
+                        console.error('翻译错误:', translateErr);
+                        console.warn('⚠️ 翻译失败，使用原文发送');
+                    }
+                }
+
+                // 保存消息到数据库
+                const res = await authFetch(`${API_BASE}/api/sales/chat/conversations/${currentConversationId}/messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: finalContent,
+                        sender_type: 'agent',
+                        message_type: 'text',
+                        auto_translate: false,
+                        original_content: content !== finalContent ? content : undefined
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    console.log('✅ 消息已保存到数据库');
+
+                    // 立即添加到界面（显示翻译后的文本）
+                    const tempMsg = {
+                        content: finalContent,
+                        direction: 'outgoing',
+                        created_at: new Date(),
+                        id: data.data?.id || Date.now()
+                    };
+                    messageHistory.push(tempMsg);
+                    renderMessages(messageHistory);
+
+                    // 清空输入框
+                    input.value = '';
+
+                    // TODO: 发送到SalesMartly（需要后端API支持）
+                    // 目前消息已保存到数据库，可以手动在SalesMartly中查看
+                } else {
+                    alert('发送失败: ' + (data.error || '未知错误'));
+                }
+            } catch (err) {
+                console.error('发送消息失败:', err);
+                alert('发送失败: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '发送';
+            }
+        }
+
+        // 回车发送（Ctrl+Enter换行）
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('messageInput');
+            if (input) {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+        });
+
+        // 页面加载
+        window.addEventListener('DOMContentLoaded', () => {
+            loadCustomers();
+            // 定时刷新客户列表
+            setInterval(loadCustomers, 30000);
+        });
+
+        // 切换翻译面板
+        function toggleTranslate() {
+            const panel = document.getElementById('translatePanel');
+            panel.classList.toggle('show');
+        }
+
+        // 翻译消息
+        async function translateMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            const targetLang = document.getElementById('translateTargetLang').value;
+            const resultDiv = document.getElementById('translateResult');
+
+            if (!text) {
+                resultDiv.innerHTML = '<div class="translate-result" style="border-left-color: #dc3545;"><strong>⚠️ 提示</strong>请先输入要翻译的文本</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="translate-result"><strong>⏳ 翻译中...</strong></div>';
+
+            try {
+                const res = await authFetch(`${API_BASE}/api/sales/chat/translate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text,
+                        target_language: targetLang
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success && data.translated) {
+                    resultDiv.innerHTML = `
+                        <div class="translate-result">
+                            <strong>✅ 译文 (${getLangName(targetLang)})：</strong>
+                            <div style="margin-top: 0.5rem;">${data.translated}</div>
+                            <button class="translate-use-btn" onclick="useTranslation(\`${data.translated.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)">
+                                使用译文
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="translate-result" style="border-left-color: #dc3545;"><strong>❌ 错误</strong>${data.error || '翻译失败'}</div>`;
+                }
+            } catch (err) {
+                console.error('翻译失败:', err);
+                resultDiv.innerHTML = `<div class="translate-result" style="border-left-color: #dc3545;"><strong>❌ 错误</strong>${err.message}</div>`;
+            }
+        }
+
+        // 使用翻译结果
+        function useTranslation(text) {
+            document.getElementById('messageInput').value = text;
+            document.getElementById('translatePanel').classList.remove('show');
+            document.getElementById('messageInput').focus();
+        }
+
+        // 获取语言名称
+        function getLangName(code) {
+            const names = {
+                en: '英语',
+                ru: '俄语',
+                ar: '阿拉伯语',
+                es: '西班牙语',
+                zh: '中文'
+            };
+            return names[code] || code;
+        }
+    </script>
+</body>
+</html>

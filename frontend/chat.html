@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoZQ 聊天工作台</title>
+  <script src="/js/auth-guard.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+      background: #f5f5f5;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .header {
+      background: #1a1a1a;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #d9d9d9;
+    }
+
+    .status-dot.online {
+      background: #52c41a;
+    }
+
+    .main-container {
+      display: flex;
+      height: calc(100vh - 60px);
+    }
+
+    .conversation-list {
+      width: 320px;
+      background: white;
+      border-right: 1px solid #e0e0e0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .list-header {
+      padding: 20px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .list-header h2 {
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .conversations {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .conv-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .conv-item:hover {
+      background: #fafafa;
+    }
+
+    .conv-item.active {
+      background: #e6f7ff;
+      border-left: 3px solid #1890ff;
+    }
+
+    .conv-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .conv-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .conv-time {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .conv-preview {
+      font-size: 13px;
+      color: #666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .unread-badge {
+      display: inline-block;
+      background: #f5222d;
+      color: white;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-left: 5px;
+    }
+
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: white;
+    }
+
+    .chat-header {
+      padding: 15px 25px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-customer-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .customer-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+    }
+
+    .customer-details h3 {
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+
+    .customer-details p {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .chat-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-icon {
+      padding: 8px 12px;
+      border: 1px solid #d9d9d9;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .btn-icon:hover {
+      background: #fafafa;
+      border-color: #1890ff;
+    }
+
+    .messages-container {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: #fafafa;
+    }
+
+    .message {
+      display: flex;
+      margin-bottom: 20px;
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.customer {
+      justify-content: flex-start;
+    }
+
+    .message.agent {
+      justify-content: flex-end;
+    }
+
+    .message-bubble {
+      max-width: 60%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .message.customer .message-bubble {
+      background: white;
+      border: 1px solid #e0e0e0;
+    }
+
+    .message.agent .message-bubble {
+      background: #1890ff;
+      color: white;
+    }
+
+    .message-time {
+      font-size: 11px;
+      color: #999;
+      margin-top: 5px;
+    }
+
+    .ai-suggestions {
+      padding: 15px 20px;
+      background: #fff7e6;
+      border-top: 2px solid #ffa940;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .ai-suggestions h4 {
+      font-size: 13px;
+      color: #fa8c16;
+      margin-bottom: 10px;
+    }
+
+    .suggestion-item {
+      padding: 10px;
+      background: white;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      border: 1px solid #ffd591;
+      transition: all 0.2s;
+    }
+
+    .suggestion-item:hover {
+      background: #fff1e6;
+      border-color: #fa8c16;
+    }
+
+    .input-area {
+      padding: 15px 20px;
+      border-top: 1px solid #e0e0e0;
+      background: white;
+    }
+
+    .input-wrapper {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .input-box {
+      flex: 1;
+      padding: 10px 15px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 14px;
+      resize: none;
+      max-height: 100px;
+    }
+
+    .btn-send {
+      padding: 10px 25px;
+      background: #1890ff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .btn-send:hover {
+      background: #40a9ff;
+    }
+
+    .btn-send:disabled {
+      background: #d9d9d9;
+      cursor: not-allowed;
+    }
+
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 10px 15px;
+      background: white;
+      border-radius: 12px;
+      width: fit-content;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: #999;
+      border-radius: 50%;
+      animation: typing 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-10px); }
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #999;
+    }
+
+    .empty-state h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>💬 AutoZQ 聊天工作台</h1>
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <a href="sales-dashboard.html" style="color: white; text-decoration: none; padding: 8px 16px; background: #333; border-radius: 4px;">📊 仪表板</a>
+      <a href="analytics-dashboard.html" style="color: white; text-decoration: none; padding: 8px 16px; background: #333; border-radius: 4px;">📈 分析</a>
+      <a href="advanced-search.html" style="color: white; text-decoration: none; padding: 8px 16px; background: #333; border-radius: 4px;">🔍 搜索</a>
+      <div class="status">
+        <span>后端连接</span>
+        <div class="status-dot" id="status-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <!-- 会话列表 -->
+    <div class="conversation-list">
+      <div class="list-header">
+        <h2>会话列表</h2>
+        <input type="text" class="search-box" placeholder="搜索客户..." id="search-input">
+      </div>
+      <div class="conversations" id="conversations">
+        <div style="padding: 40px 20px; text-align: center; color: #999;">
+          <p>加载中...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 聊天区域 -->
+    <div class="chat-area">
+      <div class="chat-header" id="chat-header" style="display: none;">
+        <div class="chat-customer-info">
+          <div class="customer-avatar" id="customer-avatar">?</div>
+          <div class="customer-details">
+            <h3 id="customer-name">客户名称</h3>
+            <p id="customer-info">加载中...</p>
+          </div>
+        </div>
+        <div class="chat-actions">
+          <button class="btn-icon" onclick="getAISuggestions()">🤖 AI建议</button>
+          <button class="btn-icon" onclick="translateMessage()">🌐 翻译</button>
+        </div>
+      </div>
+
+      <div class="messages-container" id="messages-container">
+        <div class="empty-state">
+          <h3>👈 选择一个会话开始聊天</h3>
+          <p>从左侧列表中选择客户开始对话</p>
+        </div>
+      </div>
+
+      <div class="ai-suggestions" id="ai-suggestions" style="display: none;">
+        <h4>💡 AI 智能回复建议</h4>
+        <div id="suggestions-list"></div>
+      </div>
+
+      <div class="input-area" id="input-area" style="display: none;">
+        <div class="input-wrapper">
+          <textarea class="input-box" id="message-input" placeholder="输入消息..." rows="1"></textarea>
+          <button class="btn-send" id="send-btn" onclick="sendMessage()">发送</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    const API_BASE = (window.API_BASE || window.location.origin) + '/api/sales';
+    let socket = null;
+    let currentConversation = null;
+    let conversations = [];
+    let currentCustomer = null;
+
+    // 初始化
+    async function init() {
+      console.log('🚀 初始化聊天工作台...');
+
+      // 检查后端连接
+      const apiOk = await checkAPI();
+      if (apiOk) {
+        document.getElementById('status-dot').classList.add('online');
+        console.log('✅ 后端连接成功');
+
+        // 加载会话列表
+        await loadConversations();
+
+        // 连接 Socket.IO
+        connectSocket();
+      } else {
+        alert('⚠️ 无法连接到后端服务\n\n请确保后端服务已启动（npm run dev）');
+      }
+    }
+
+    // 检查 API 连接
+    async function checkAPI() {
+      try {
+        const response = await authFetch(window.API_BASE || window.location.origin);
+        return response.ok;
+      } catch (error) {
+        console.error('API 连接失败:', error);
+        return false;
+      }
+    }
+
+    // 加载会话列表
+    async function loadConversations() {
+      try {
+        const response = await authFetch(`${API_BASE}/chat/conversations?limit=50`);
+        const data = await response.json();
+
+        if (data.success && data.data.length > 0) {
+          conversations = data.data;
+          renderConversations(conversations);
+        } else {
+          document.getElementById('conversations').innerHTML =
+            '<div style="padding: 40px 20px; text-align: center; color: #999;"><p>暂无会话</p></div>';
+        }
+      } catch (error) {
+        console.error('加载会话失败:', error);
+      }
+    }
+
+    // 渲染会话列表
+    function renderConversations(convs) {
+      const container = document.getElementById('conversations');
+      container.innerHTML = '';
+
+      convs.forEach(conv => {
+        const unreadBadge = conv.unread_count > 0
+          ? `<span class="unread-badge">${conv.unread_count}</span>`
+          : '';
+
+        const div = document.createElement('div');
+        div.className = 'conv-item';
+        div.onclick = () => selectConversation(conv);
+        div.innerHTML = `
+          <div class="conv-header">
+            <span class="conv-name">${conv.customer_name || '未命名'} ${unreadBadge}</span>
+            <span class="conv-time">${formatTime(conv.last_message_at)}</span>
+          </div>
+          <div class="conv-preview">${conv.last_message_preview || '暂无消息'}</div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // 选择会话
+    async function selectConversation(conv) {
+      currentConversation = conv;
+
+      // 更新选中状态
+      document.querySelectorAll('.conv-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      event.currentTarget.classList.add('active');
+
+      // 显示聊天界面
+      document.getElementById('chat-header').style.display = 'flex';
+      document.getElementById('input-area').style.display = 'block';
+
+      // 加载客户信息
+      await loadCustomerInfo(conv.customer_id);
+
+      // 加载消息
+      await loadMessages(conv.id);
+
+      // 标记为已读
+      markAsRead(conv.id);
+    }
+
+    // 加载客户信息
+    async function loadCustomerInfo(customerId) {
+      try {
+        const response = await authFetch(`${API_BASE}/customers/${customerId}`);
+        const data = await response.json();
+
+        if (data.success) {
+          currentCustomer = data.data;
+          const initial = data.data.name ? data.data.name[0].toUpperCase() : '?';
+          document.getElementById('customer-avatar').textContent = initial;
+          document.getElementById('customer-name').textContent = data.data.name || '未命名';
+          document.getElementById('customer-info').textContent =
+            `${data.data.phone || ''} · ${data.data.country || ''} · ${data.data.rating || 'C'}级`;
+        }
+      } catch (error) {
+        console.error('加载客户信息失败:', error);
+      }
+    }
+
+    // 加载消息
+    async function loadMessages(conversationId) {
+      try {
+        const response = await authFetch(`${API_BASE}/chat/conversations/${conversationId}/messages?limit=50`);
+        const data = await response.json();
+
+        const container = document.getElementById('messages-container');
+        container.innerHTML = '';
+
+        if (data.success && data.data.length > 0) {
+          data.data.forEach(msg => {
+            appendMessage(msg);
+          });
+          container.scrollTop = container.scrollHeight;
+        } else {
+          container.innerHTML = '<div class="empty-state"><p>暂无消息记录</p></div>';
+        }
+      } catch (error) {
+        console.error('加载消息失败:', error);
+      }
+    }
+
+    // 添加消息到界面
+    function appendMessage(msg) {
+      const container = document.getElementById('messages-container');
+      const emptyState = container.querySelector('.empty-state');
+      if (emptyState) emptyState.remove();
+
+      const div = document.createElement('div');
+      div.className = `message ${msg.sender_type}`;
+      div.innerHTML = `
+        <div class="message-bubble">
+          <div>${msg.content}</div>
+          ${msg.translated_content ? `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.3); font-size: 12px; opacity: 0.9;">🌐 ${msg.translated_content}</div>` : ''}
+          <div class="message-time">${formatTime(msg.timestamp)}</div>
+        </div>
+      `;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // 发送消息
+    async function sendMessage() {
+      const input = document.getElementById('message-input');
+      const content = input.value.trim();
+
+      if (!content || !currentConversation) return;
+
+      const sendBtn = document.getElementById('send-btn');
+      sendBtn.disabled = true;
+
+      try {
+        const response = await authFetch(`${API_BASE}/chat/conversations/${currentConversation.id}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: content,
+            sender_type: 'agent',
+            sender_id: 'agent-001',
+            auto_translate: true
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          appendMessage(data.data);
+          input.value = '';
+          input.style.height = 'auto';
+        }
+      } catch (error) {
+        console.error('发送消息失败:', error);
+        alert('发送失败');
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    // 获取 AI 回复建议
+    async function getAISuggestions() {
+      if (!currentConversation || !currentCustomer) return;
+
+      const suggestionsDiv = document.getElementById('ai-suggestions');
+      const suggestionsList = document.getElementById('suggestions-list');
+
+      suggestionsDiv.style.display = 'block';
+      suggestionsList.innerHTML = '<div style="padding: 10px; color: #1890ff;">🔄 AI 正在思考...</div>';
+
+      try {
+        const response = await authFetch(`${API_BASE}/chat/suggest-replies`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversation_id: currentConversation.id,
+            customer_profile: {
+              name: currentCustomer.name,
+              rating: currentCustomer.rating,
+              country: currentCustomer.country
+            }
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.suggestions) {
+          suggestionsList.innerHTML = '';
+          data.suggestions.forEach(sug => {
+            const div = document.createElement('div');
+            div.className = 'suggestion-item';
+            div.textContent = sug.content;
+            div.onclick = () => {
+              document.getElementById('message-input').value = sug.content;
+              suggestionsDiv.style.display = 'none';
+            };
+            suggestionsList.appendChild(div);
+          });
+        }
+      } catch (error) {
+        console.error('获取 AI 建议失败:', error);
+        suggestionsList.innerHTML = '<div style="padding: 10px; color: #f5222d;">❌ 获取失败</div>';
+      }
+    }
+
+    // 翻译消息
+    async function translateMessage() {
+      const input = document.getElementById('message-input');
+      const text = input.value.trim();
+
+      if (!text) {
+        alert('请先输入要翻译的文本');
+        return;
+      }
+
+      const targetLang = currentCustomer?.language || 'en';
+
+      try {
+        const response = await authFetch(`${API_BASE}/chat/translate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            target_language: targetLang
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          input.value = data.translated;
+        }
+      } catch (error) {
+        console.error('翻译失败:', error);
+        alert('翻译失败');
+      }
+    }
+
+    // 标记为已读
+    async function markAsRead(conversationId) {
+      try {
+        await authFetch(`${API_BASE}/chat/conversations/${conversationId}/read`, {
+          method: 'POST'
+        });
+      } catch (error) {
+        console.error('标记已读失败:', error);
+      }
+    }
+
+    // 连接 Socket.IO
+    function connectSocket() {
+      socket = io(window.API_BASE || window.location.origin);
+
+      socket.on('connect', () => {
+        console.log('✅ Socket.IO 已连接');
+        socket.emit('authenticate', {
+          userId: 'agent-001',
+          role: 'agent'
+        });
+      });
+
+      socket.on('authenticated', (data) => {
+        console.log('✅ Socket.IO 已认证:', data);
+      });
+
+      socket.on('new_message', (data) => {
+        console.log('📩 收到新消息:', data);
+        if (currentConversation && data.message.conversation_id === currentConversation.id) {
+          appendMessage(data.message);
+        }
+        loadConversations(); // 刷新会话列表
+      });
+
+      socket.on('user_typing', (data) => {
+        console.log('⌨️ 对方正在输入:', data);
+      });
+
+      socket.on('disconnect', () => {
+        console.log('❌ Socket.IO 已断开');
+        document.getElementById('status-dot').classList.remove('online');
+      });
+    }
+
+    // 格式化时间
+    function formatTime(timestamp) {
+      if (!timestamp) return '';
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+
+      if (diff < 60000) return '刚刚';
+      if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
+      if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
+
+      return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+    }
+
+    // 输入框自动调整高度
+    const messageInput = document.getElementById('message-input');
+    messageInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    // 回车发送消息
+    messageInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // 搜索会话
+    document.getElementById('search-input').addEventListener('input', function(e) {
+      const keyword = e.target.value.toLowerCase();
+      const filtered = conversations.filter(conv =>
+        (conv.customer_name || '').toLowerCase().includes(keyword)
+      );
+      renderConversations(filtered);
+    });
+
+    // 页面加载时初始化
+    window.onload = init;
+  </script>
+</body>
+</html>
+

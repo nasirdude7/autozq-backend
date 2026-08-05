@@ -1,0 +1,33 @@
+<!-- Yandex.Metrica counter -->
+<script type="text/javascript" >
+   (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+   m[i].l=1*new Date();
+   for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+   k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+   (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+   ym(XXXXXX, "init", {
+        clickmap:true,
+        trackLinks:true,
+        accurateTrackBounce:true,
+        webvisor:true,
+        ecommerce:"dataLayer"
+   });
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/XXXXXX" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrica counter -->
+
+<!--
+使用说明：
+1. 访问 https://metrica.yandex.ru
+2. 创建新的计数器
+3. 将上面的 XXXXXX 替换为你的计数器ID
+4. 将此代码粘贴到所有页面的 </head> 标签之前
+
+功能说明：
+- clickmap: 点击热力图
+- trackLinks: 外链追踪
+- accurateTrackBounce: 精确跳出率
+- webvisor: 会话回放
+- ecommerce: 电商追踪
+-->

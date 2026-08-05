@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoZQ</title>
+    <script src="/js/customer-guard.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f6f9; color: #222; }
+        header {
+            background: #1a3a5c; color: #fff; padding: 14px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        header .brand { font-size: 18px; font-weight: 600; }
+        header .right { display: flex; align-items: center; gap: 14px; font-size: 13px; }
+        header .lang button {
+            background: none; border: none; color: #cbd8e6; cursor: pointer; font-size: 13px; padding: 2px 5px;
+        }
+        header .lang button.active { color: #fff; font-weight: 700; }
+        header .logout { background: rgba(255,255,255,.15); border: none; color: #fff; padding: 6px 12px; border-radius: 5px; cursor: pointer; }
+        .wrap { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+        h2 { font-size: 20px; margin-bottom: 16px; color: #1a3a5c; }
+        .quote-card {
+            background: #fff; border-radius: 10px; padding: 18px 20px; margin-bottom: 14px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06); display: flex; justify-content: space-between; align-items: center; gap: 16px;
+        }
+        .quote-card .info { flex: 1; }
+        .quote-card .no { font-size: 13px; color: #888; }
+        .quote-card .amount { font-size: 22px; font-weight: 700; color: #1a3a5c; margin: 4px 0; }
+        .quote-card .meta { font-size: 12px; color: #999; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge.sent { background: #fff3e0; color: #e65100; }
+        .badge.accepted { background: #e8f5e9; color: #2e7d32; }
+        .badge.rejected { background: #ffebee; color: #c62828; }
+        .badge.expired { background: #eceff1; color: #607d8b; }
+        .actions { display: flex; flex-direction: column; gap: 8px; }
+        .btn-sm { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; white-space: nowrap; }
+        .btn-view { background: #1a3a5c; color: #fff; }
+        .btn-accept { background: #2e7d32; color: #fff; }
+        .empty { text-align: center; color: #999; padding: 60px 0; }
+        /* 详情弹层 */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: flex-start; justify-content: center; overflow: auto; padding: 24px; z-index: 100; }
+        .overlay.show { display: flex; }
+        .modal { background: #fff; border-radius: 10px; width: 100%; max-width: 820px; }
+        .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid #eee; }
+        .modal-head button { background: #eee; border: none; border-radius: 5px; padding: 6px 12px; cursor: pointer; }
+        .modal-body { }
+        .modal-body iframe { width: 100%; border: none; min-height: 70vh; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">🚗 AutoZQ</div>
+        <div class="right">
+            <span class="lang">
+                <button data-lang="ru">RU</button>
+                <button data-lang="en">EN</button>
+                <button data-lang="zh">中文</button>
+            </span>
+            <span id="welcome"></span>
+            <button class="logout" id="btnLogout"></button>
+        </div>
+    </header>
+    <div class="wrap">
+        <h2 id="pageTitle"></h2>
+        <div id="list"></div>
+    </div>
+
+    <div class="overlay" id="overlay">
+        <div class="modal">
+            <div class="modal-head">
+                <strong id="modalTitle"></strong>
+                <button id="modalClose"></button>
+            </div>
+            <div class="modal-body">
+                <iframe id="modalFrame"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/customer-portal.js"></script>
+</body>
+</html>

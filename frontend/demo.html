@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>车辆信息录入系统 - 纯前端演示版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <p class="text-sm text-yellow-700">
+                <strong>演示模式</strong>：当前使用模拟识别数据，不调用真实 AI API
+            </p>
+        </div>
+
+        <h1 class="text-3xl font-bold text-center text-gray-900 mb-2">
+            🚗 车辆信息录入系统
+        </h1>
+        <p class="text-center text-gray-600 mb-8">
+            上传车辆报价截图，AI 自动识别车辆信息
+        </p>
+
+        <!-- 上传区域 -->
+        <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">上传车辆图片</h2>
+
+            <div id="uploadArea" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
+                <input type="file" id="imageInput" accept="image/*" class="hidden">
+                <label for="imageInput" class="cursor-pointer">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <p class="mt-4 text-sm text-gray-600">
+                        <span class="text-blue-600 font-medium">点击上传</span> 或拖拽图片到此处
+                    </p>
+                    <p class="text-xs text-gray-500 mt-2">支持 PNG, JPG, GIF 格式，最大 10MB</p>
+                </label>
+            </div>
+
+            <div id="preview" class="mt-4 hidden">
+                <img id="previewImg" class="max-h-64 mx-auto rounded-lg shadow-md">
+            </div>
+
+            <div id="loading" class="hidden mt-6">
+                <div class="text-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p class="mt-4 text-sm text-gray-600">🤖 AI 识别中...</p>
+                    <p class="mt-2 text-xs text-gray-500">预计 2-5 秒</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 表单区域 -->
+        <div id="formSection" class="hidden max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">车辆信息</h2>
+
+            <form id="vehicleForm" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- 品牌 -->
+                <div>
+                    <label class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">品牌</span>
+                        <span id="badge-brand" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">-</span>
+                    </label>
+                    <input type="text" id="brand" placeholder="例如: Toyota" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- 车型 -->
+                <div>
+                    <label class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">车型</span>
+                        <span id="badge-model" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">-</span>
+                    </label>
+                    <input type="text" id="model" placeholder="例如: Camry" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- 年款 -->
+                <div>
+                    <label class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">年款</span>
+                        <span id="badge-year" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">-</span>
+                    </label>
+                    <input type="number" id="year" placeholder="例如: 2020" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- 颜色 -->
+                <div>
+                    <label class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">颜色</span>
+                        <span id="badge-color" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">-</span>
+                    </label>
+                    <input type="text" id="color" placeholder="例如: 白色" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- 里程 -->
+                <div>
+                    <label class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">里程 (km)</span>
+                        <span id="badge-mileage" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">-</span>
+                    </label>
+                    <input type="number" id="mileage" placeholder="例如: 50000" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- 排量 -->
+                <div>
+                    <label class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">排量</span>
+                        <span id="badge-displacement" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">-</span>
+                    </label>
+                    <input type="text" id="displacement" placeholder="例如: 2.0L" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- 马力 -->
+                <div>
+                    <label class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">马力</span>
+                        <span id="badge-horsepower" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">-</span>
+                    </label>
+                    <input type="number" id="horsepower" placeholder="例如: 150" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- 变速箱 -->
+                <div>
+                    <label class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">变速箱</span>
+                        <span id="badge-transmission" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">-</span>
+                    </label>
+                    <input type="text" id="transmission" placeholder="例如: 自动" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- 驱动方式 -->
+                <div>
+                    <label class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">驱动方式</span>
+                        <span id="badge-drive_type" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">-</span>
+                    </label>
+                    <input type="text" id="drive_type" placeholder="例如: 前驱" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </form>
+
+            <!-- 说明 -->
+            <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mt-6">
+                <div class="flex">
+                    <svg class="h-5 w-5 text-blue-400 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="text-sm text-blue-700">
+                        <p class="font-medium mb-2">识别说明</p>
+                        <ul class="list-disc list-inside space-y-1 text-xs">
+                            <li><strong>🟢 绿色背景</strong>：AI 高置信度识别</li>
+                            <li><strong>🟡 黄色背景</strong>：AI 中等置信度，建议核对</li>
+                            <li><strong>🔴 红色背景</strong>：AI 无法识别，需手动填写</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 按钮 -->
+            <div class="flex items-center justify-end space-x-4 mt-6">
+                <button type="button" onclick="location.reload()" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    重新开始
+                </button>
+                <button type="submit" form="vehicleForm" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                    保存信息
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟识别数据
+        const mockResults = [
+            {
+                brand: { value: 'Toyota', confidence: 'high' },
+                model: { value: 'Camry', confidence: 'high' },
+                year: { value: '2020', confidence: 'high' },
+                color: { value: '白色', confidence: 'high' },
+                mileage: { value: '45000', unit: 'km', confidence: 'medium' },
+                displacement: { value: '2.5L', confidence: 'high' },
+                horsepower: { value: '203', confidence: 'medium' },
+                transmission: { value: '自动', confidence: 'high' },
+                drive_type: { value: '前驱', confidence: 'high' },
+            },
+            {
+                brand: { value: 'Honda', confidence: 'high' },
+                model: { value: 'Accord', confidence: 'high' },
+                year: { value: '2019', confidence: 'medium' },
+                color: { value: '黑色', confidence: 'high' },
+                mileage: { value: '65000', unit: 'km', confidence: 'low' },
+                displacement: { value: '1.5T', confidence: 'medium' },
+                horsepower: { value: '194', confidence: 'low' },
+                transmission: { value: 'CVT', confidence: 'high' },
+                drive_type: { value: '前驱', confidence: 'medium' },
+            },
+            {
+                brand: { value: 'Nissan', confidence: 'medium' },
+                model: { value: 'Altima', confidence: 'medium' },
+                year: { value: '2021', confidence: 'high' },
+                color: { value: '灰色', confidence: 'high' },
+                mileage: { value: '', unit: 'km', confidence: 'low' },
+                displacement: { value: '2.0T', confidence: 'medium' },
+                horsepower: { value: '', confidence: 'low' },
+                transmission: { value: '自动', confidence: 'medium' },
+                drive_type: { value: '', confidence: 'low' },
+            },
+        ];
+
+        const imageInput = document.getElementById('imageInput');
+        const preview = document.getElementById('preview');
+        const previewImg = document.getElementById('previewImg');
+        const loading = document.getElementById('loading');
+        const formSection = document.getElementById('formSection');
+
+        // 文件上传处理
+        imageInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // 显示预览
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                preview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+
+            // 显示加载状态
+            loading.classList.remove('hidden');
+            formSection.classList.add('hidden');
+
+            // 模拟识别延迟（2-5秒）
+            await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
+
+            // 隐藏加载，显示结果
+            loading.classList.add('hidden');
+
+            // 随机选择一个模拟结果
+            const result = mockResults[Math.floor(Math.random() * mockResults.length)];
+            fillForm(result);
+            formSection.classList.remove('hidden');
+        });
+
+        // 填充表单
+        function fillForm(data) {
+            const fields = ['brand', 'model', 'year', 'color', 'mileage', 'displacement', 'horsepower', 'transmission', 'drive_type'];
+
+            fields.forEach(field => {
+                const fieldData = data[field] || { value: '', confidence: 'low' };
+                const input = document.getElementById(field);
+                const badge = document.getElementById('badge-' + field);
+
+                input.value = fieldData.value || '';
+
+                // 置信度样式
+                const confidenceStyles = {
+                    high: { bg: 'bg-green-100', text: 'text-green-800', label: '高', inputBg: 'bg-green-50 border-green-300' },
+                    medium: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '中', inputBg: 'bg-yellow-50 border-yellow-300' },
+                    low: { bg: 'bg-red-100', text: 'text-red-800', label: '低', inputBg: 'bg-red-50 border-red-300' }
+                };
+
+                const style = confidenceStyles[fieldData.confidence] || confidenceStyles.low;
+
+                // 设置标签
+                badge.className = `px-2 py-1 rounded-full text-xs font-medium ${style.bg} ${style.text}`;
+                badge.textContent = style.label;
+
+                // 设置输入框样式
+                input.className = `w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${style.inputBg}`;
+            });
+        }
+
+        // 表单提交
+        document.getElementById('vehicleForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const formData = {};
+            const fields = ['brand', 'model', 'year', 'color', 'mileage', 'displacement', 'horsepower', 'transmission', 'drive_type'];
+
+            fields.forEach(field => {
+                formData[field] = document.getElementById(field).value;
+            });
+
+            console.log('保存的数据:', formData);
+            alert('✅ 数据已保存！\n\n请按 F12 打开浏览器控制台查看详细数据。');
+        });
+    </script>
+</body>
+</html>

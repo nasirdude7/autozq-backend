@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>背景替换测试</title>
+</head>
+<body>
+    <h1>背景替换功能测试</h1>
+
+    <p>1. 打开浏览器控制台（F12）</p>
+    <p>2. 点击下面的按钮测试</p>
+
+    <button onclick="testReplaceBackground()" style="padding: 10px 20px; font-size: 16px; margin: 20px;">
+        测试替换背景功能
+    </button>
+
+    <div id="result"></div>
+
+    <script>
+        async function testReplaceBackground() {
+            console.log('按钮被点击了！');
+            document.getElementById('result').innerHTML = '<p style="color: green;">✅ 按钮点击事件正常</p>';
+
+            // 测试 API 连接
+            try {
+                const response = await fetch('http://localhost:3001/api/vehicle/health');
+                const data = await response.json();
+                console.log('后端连接:', data);
+                document.getElementById('result').innerHTML += '<p style="color: green;">✅ 后端连接正常</p>';
+            } catch (error) {
+                console.error('后端连接失败:', error);
+                document.getElementById('result').innerHTML += '<p style="color: red;">❌ 后端连接失败: ' + error.message + '</p>';
+            }
+        }
+
+        console.log('测试页面已加载');
+    </script>
+</body>
+</html>

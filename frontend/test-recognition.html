@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>车辆识别测试</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #1e1e1e; color: #ccc; }
+        .upload { border: 2px dashed #007acc; padding: 40px; text-align: center; cursor: pointer; }
+        .result { margin-top: 20px; padding: 20px; background: #252526; border-radius: 4px; }
+        button { padding: 10px 20px; background: #007acc; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🚗 车辆识别测试</h1>
+
+    <div class="upload" onclick="document.getElementById('file').click()">
+        <input type="file" id="file" accept="image/*" style="display:none">
+        点击上传车辆图片
+    </div>
+
+    <div id="status" style="margin-top:20px; color:#007acc;"></div>
+    <div id="result" class="result" style="display:none;"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001';
+
+        document.getElementById('file').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const status = document.getElementById('status');
+            const result = document.getElementById('result');
+
+            status.textContent = '⏳ 正在识别...';
+            result.style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                console.log('发送请求到:', API_BASE + '/api/vehicle/recognize');
+
+                const response = await fetch(API_BASE + '/api/vehicle/recognize', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                console.log('响应状态:', response.status);
+                const data = await response.json();
+                console.log('响应数据:', data);
+
+                if (data.success) {
+                    status.textContent = '✅ 识别成功！';
+                    result.innerHTML = `
+                        <h3>识别结果：</h3>
+                        <p><strong>品牌：</strong>${data.data.brand?.value || '未识别'} (${data.data.brand?.confidence})</p>
+                        <p><strong>车型：</strong>${data.data.model?.value || '未识别'} (${data.data.model?.confidence})</p>
+                        <p><strong>年份：</strong>${data.data.year?.value || '未识别'} (${data.data.year?.confidence})</p>
+                        <p><strong>颜色：</strong>${data.data.color?.value || '未识别'} (${data.data.color?.confidence})</p>
+                    `;
+                    result.style.display = 'block';
+                } else {
+                    status.textContent = '❌ 识别失败: ' + data.error;
+                }
+            } catch (error) {
+                status.textContent = '❌ 错误: ' + error.message;
+                console.error('详细错误:', error);
+            }
+        });
+    </script>
+</body>
+</html>

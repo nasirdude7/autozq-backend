@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>文章生成调试</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #1e1e1e; color: #ccc; }
+        button { padding: 12px 24px; background: #007acc; color: white; border: none; cursor: pointer; border-radius: 4px; margin: 10px 5px; }
+        .log { background: #252526; padding: 15px; border-radius: 4px; margin-top: 10px; max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+        .success { color: #4ec9b0; }
+        .error { color: #f48771; }
+        .info { color: #569cd6; }
+    </style>
+</head>
+<body>
+    <h1>🔍 文章生成调试工具</h1>
+
+    <button onclick="testAPI()">测试API连接</button>
+    <button onclick="testGenerate()">测试文章生成（无配图）</button>
+    <button onclick="testGenerateWithImages()">测试文章生成（含配图）</button>
+    <button onclick="clearLog()">清空日志</button>
+
+    <div id="log" class="log"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001';
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const className = type;
+            logDiv.innerHTML += `<div class="${className}">[${time}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        async function testAPI() {
+            log('测试后端连接...', 'info');
+            try {
+                const response = await fetch(`${API_BASE}/api/vehicle/health`);
+                const data = await response.json();
+                if (data.success) {
+                    log('✅ 后端连接正常', 'success');
+                    log(JSON.stringify(data, null, 2), 'info');
+                } else {
+                    log('❌ 后端返回错误', 'error');
+                }
+            } catch (error) {
+                log(`❌ 连接失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGenerate() {
+            log('开始生成文章（无配图）...', 'info');
+            const startTime = Date.now();
+
+            try {
+                const payload = {
+                    topic: '测试文章',
+                    type: 'guide',
+                    word_count: 800,
+                    include_faq: false,
+                    language: 'ru',
+                    include_images: false
+                };
+
+                log('请求参数: ' + JSON.stringify(payload), 'info');
+
+                const response = await fetch(`${API_BASE}/api/article/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const elapsed = Math.round((Date.now() - startTime) / 1000);
+                log(`响应状态: ${response.status} (耗时${elapsed}秒)`, 'info');
+
+                const data = await response.json();
+
+                if (data.success) {
+                    log('✅ 生成成功！', 'success');
+                    log(`标题: ${data.data.title}`, 'success');
+                    log(`字数: ${data.data.word_count}`, 'success');
+                    log(`关键词: ${data.data.keywords?.slice(0, 3).join(', ')}`, 'success');
+                } else {
+                    log(`❌ 生成失败: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ 错误: ${error.message}`, 'error');
+                log(`详细: ${error.stack}`, 'error');
+            }
+        }
+
+        async function testGenerateWithImages() {
+            log('开始生成文章（含配图）...', 'info');
+            log('⚠️ 此测试需要2-3分钟，请耐心等待', 'info');
+            const startTime = Date.now();
+
+            try {
+                const payload = {
+                    topic: '从中国出口汽车指南',
+                    type: 'export',
+                    word_count: 800,
+                    include_faq: false,
+                    language: 'ru',
+                    include_images: true
+                };
+
+                log('请求参数: ' + JSON.stringify(payload), 'info');
+
+                const response = await fetch(`${API_BASE}/api/article/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const elapsed = Math.round((Date.now() - startTime) / 1000);
+                log(`响应状态: ${response.status} (耗时${elapsed}秒)`, 'info');
+
+                const data = await response.json();
+
+                if (data.success) {
+                    log('✅ 生成成功！', 'success');
+                    log(`标题: ${data.data.title}`, 'success');
+                    log(`字数: ${data.data.word_count}`, 'success');
+                    log(`配图数量: ${data.data.images?.length || 0}`, 'success');
+                    if (data.data.images) {
+                        data.data.images.forEach((img, i) => {
+                            log(`图片${i+1}: ${img.url.substring(0, 60)}...`, 'success');
+                        });
+                    }
+                } else {
+                    log(`❌ 生成失败: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ 错误: ${error.message}`, 'error');
+                log(`详细: ${error.stack}`, 'error');
+            }
+        }
+
+        // 页面加载时自动测试连接
+        window.onload = () => {
+            log('=== 文章生成调试工具已就绪 ===', 'info');
+            testAPI();
+        };
+    </script>
+</body>
+</html>

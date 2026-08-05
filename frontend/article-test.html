@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>SEO文章生成测试</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #1e1e1e; color: #ccc; max-width: 1000px; margin: 0 auto; }
+        .section { background: #252526; padding: 20px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #3c3c3c; }
+        input, select, textarea { width: 100%; padding: 10px; background: #1e1e1e; border: 1px solid #3c3c3c; color: #ccc; border-radius: 4px; margin: 8px 0; }
+        button { padding: 12px 24px; background: #007acc; color: white; border: none; cursor: pointer; border-radius: 4px; font-size: 14px; }
+        button:hover { background: #005a9e; }
+        .result { background: #2a2d2e; padding: 15px; border-radius: 4px; margin-top: 10px; border-left: 3px solid #4ec9b0; }
+        .error { border-left-color: #f48771; }
+        .loading { text-align: center; color: #007acc; padding: 20px; }
+    </style>
+</head>
+<body>
+    <h1>📰 SEO文章生成测试工具</h1>
+
+    <div class="section">
+        <h3>文章类型</h3>
+        <select id="type">
+            <option value="guide">📖 购车指南</option>
+            <option value="comparison">⚖️ 对比评测</option>
+            <option value="analysis">📊 市场分析</option>
+            <option value="export">🚢 出口指南</option>
+            <option value="usedcar_benefits">💎 二手车优势</option>
+            <option value="usedcar_tips">🔍 选车技巧</option>
+        </select>
+
+        <h3>语言</h3>
+        <select id="language">
+            <option value="ru">🇷🇺 Русский (俄语)</option>
+            <option value="en">🇬🇧 English (英语)</option>
+            <option value="fr">🇫🇷 Français (法语)</option>
+            <option value="es">🇪🇸 Español (西语)</option>
+            <option value="ar">🇸🇦 العربية (阿语)</option>
+        </select>
+
+        <h3>文章主题</h3>
+        <input type="text" id="topic" placeholder="例如：从中国出口二手车到俄罗斯完整指南">
+
+        <h3>字数</h3>
+        <select id="wordCount">
+            <option value="800">800-1000词</option>
+            <option value="1200" selected>1200-1500词</option>
+            <option value="2000">2000-2500词</option>
+        </select>
+
+        <h3>FAQ</h3>
+        <label>
+            <input type="checkbox" id="faq" checked> 包含FAQ（5-7个问答）
+        </label>
+
+        <h3>配图</h3>
+        <label>
+            <input type="checkbox" id="images"> 🎨 自动生成配图（3张，需额外时间）
+        </label>
+
+        <br><br>
+        <button onclick="generateArticle()">✨ 生成文章</button>
+    </div>
+
+    <div id="status"></div>
+    <div id="result"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001';
+
+        async function generateArticle() {
+            const topic = document.getElementById('topic').value.trim();
+            if (!topic) {
+                alert('请输入文章主题');
+                return;
+            }
+
+            const statusDiv = document.getElementById('status');
+            const resultDiv = document.getElementById('result');
+
+            statusDiv.innerHTML = '<div class="loading">⏳ 正在生成文章，预计需要1-2分钟...<br>请耐心等待，不要关闭页面</div>';
+            resultDiv.innerHTML = '';
+
+            try {
+                const startTime = Date.now();
+
+                const response = await fetch(`${API_BASE}/api/article/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        topic: topic,
+                        type: document.getElementById('type').value,
+                        word_count: parseInt(document.getElementById('wordCount').value),
+                        include_faq: document.getElementById('faq').checked,
+                        language: document.getElementById('language').value,
+                        include_images: document.getElementById('images').checked
+                    })
+                });
+
+                const elapsed = Math.round((Date.now() - startTime) / 1000);
+                console.log('请求耗时:', elapsed, '秒');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    statusDiv.innerHTML = `<div class="result">✅ 生成成功！耗时 ${elapsed} 秒</div>`;
+
+                    const article = result.data;
+                    resultDiv.innerHTML = `
+                        <div class="section">
+                            <h3>📄 ${article.title}</h3>
+                            <p><strong>SEO标题:</strong> ${article.seo_title}</p>
+                            <p><strong>描述:</strong> ${article.meta_description}</p>
+                            <p><strong>字数:</strong> ${article.word_count} 词</p>
+                            <p><strong>关键词:</strong> ${(article.keywords || []).join(', ')}</p>
+                            ${article.faq ? `<p><strong>FAQ:</strong> ${article.faq.length} 个问答</p>` : ''}
+                            <button onclick="copyContent()">📋 复制HTML</button>
+                            <button onclick="viewFull()">👁️ 查看完整内容</button>
+                        </div>
+                    `;
+                    window.lastArticle = article;
+                } else {
+                    throw new Error(result.error || '生成失败');
+                }
+
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="result error">❌ 错误: ${error.message}</div>`;
+                console.error('详细错误:', error);
+            }
+        }
+
+        function copyContent() {
+            if (!window.lastArticle) return;
+            const html = window.lastArticle.content;
+            navigator.clipboard.writeText(html).then(() => {
+                alert('✅ HTML已复制到剪贴板');
+            });
+        }
+
+        function viewFull() {
+            if (!window.lastArticle) return;
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>${window.lastArticle.title}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.8; }
+                        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+                        h2 { color: #34495e; margin-top: 30px; }
+                        h3 { color: #555; }
+                        p { margin: 16px 0; }
+                    </style>
+                </head>
+                <body>
+                    ${window.lastArticle.content}
+                </body>
+                </html>
+            `);
+        }
+    </script>
+</body>
+</html>

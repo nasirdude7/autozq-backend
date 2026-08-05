@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:yandex="http://news.yandex.ru"
+     xmlns:media="http://search.yahoo.com/mrss/"
+     xmlns:turbo="http://turbo.yandex.ru"
+     version="2.0">
+  <channel>
+    <title>AutoZQ - Экспорт автомобилей из Китая в Россию</title>
+    <link>https://autozq.ru</link>
+    <description>Профессиональный экспорт новых и подержанных автомобилей из Китая через Маньчжурию</description>
+    <language>ru</language>
+
+    <yandex:logo type="square">https://autozq.ru/images/logo-square.png</yandex:logo>
+    <yandex:logo>https://autozq.ru/images/logo.png</yandex:logo>
+
+    <!-- Главная страница -->
+    <item turbo="true">
+      <link>https://autozq.ru/</link>
+      <turbo:topic>Главная</turbo:topic>
+      <pubDate>Mon, 30 Jun 2026 12:00:00 +0800</pubDate>
+      <author>AutoZQ</author>
+      <turbo:content>
+        <![CDATA[
+          <header>
+            <h1>AutoZQ - Экспорт автомобилей из Китая в Россию</h1>
+            <figure>
+              <img src="https://autozq.ru/images/hero.jpg" alt="Автомобили из Китая">
+            </figure>
+          </header>
+
+          <h2>Почему выбирают нас?</h2>
+          <p><strong>10 лет опыта</strong> на рынке экспорта автомобилей из Китая в Россию через Маньчжурию.</p>
+
+          <h3>🚗 Специализация: автомобили до 160 л.с.</h3>
+          <p>Освобождены от утильсбора при ввозе в Россию. Экономия от 50,000 до 350,000 рублей!</p>
+
+          <h3>✅ Двойная проверка качества</h3>
+          <ul>
+            <li>Первая проверка в месте покупки в Китае</li>
+            <li>Вторая проверка в Маньчжурии перед отправкой</li>
+            <li>Фото и видео отчет на каждом этапе</li>
+          </ul>
+
+          <h3>💳 VTB Bank оплата</h3>
+          <p>Решение проблемы международных переводов между Россией и Китаем.</p>
+
+          <h3>📦 Полный цикл: 45-60 дней</h3>
+          <p>От выбора автомобиля до доставки в ваш город.</p>
+
+          <div data-block="widget-feedback" data-title="Получить консультацию">
+            <div data-block="chat" data-type="telegram" data-url="https://t.me/autozq"></div>
+            <div data-block="chat" data-type="whatsapp" data-url="https://wa.me/xxxxxxxxxxxxx"></div>
+          </div>
+
+          <h2>Популярные модели</h2>
+          <div data-block="carousel">
+            <div data-block="card">
+              <figure>
+                <img src="https://autozq.ru/images/toyota-corolla.jpg" alt="Toyota Corolla">
+              </figure>
+              <h4>Toyota Corolla</h4>
+              <p>От $12,000 | До 160 л.с.</p>
+            </div>
+            <div data-block="card">
+              <figure>
+                <img src="https://autozq.ru/images/toyota-rav4.jpg" alt="Toyota RAV4">
+              </figure>
+              <h4>Toyota RAV4</h4>
+              <p>От $18,000 | До 160 л.с.</p>
+            </div>
+            <div data-block="card">
+              <figure>
+                <img src="https://autozq.ru/images/honda-civic.jpg" alt="Honda Civic">
+              </figure>
+              <h4>Honda Civic</h4>
+              <p>От $11,000 | До 160 л.с.</p>
+            </div>
+          </div>
+
+          <h2>Контакты</h2>
+          <p><strong>Telegram:</strong> @autozq</p>
+          <p><strong>WhatsApp:</strong> +86-xxx-xxxx-xxxx</p>
+          <p><strong>Email:</strong> info@autozq.ru</p>
+          <p><strong>Сайт:</strong> https://autozq.ru</p>
+        ]]>
+      </turbo:content>
+    </item>
+
+    <!-- FAQ страница -->
+    <item turbo="true">
+      <link>https://autozq.ru/faq.html</link>
+      <turbo:topic>Часто задаваемые вопросы</turbo:topic>
+      <pubDate>Mon, 30 Jun 2026 12:00:00 +0800</pubDate>
+      <author>AutoZQ</author>
+      <turbo:content>
+        <![CDATA[
+          <header>
+            <h1>Часто задаваемые вопросы</h1>
+          </header>
+
+          <div data-block="accordion">
+            <div data-block="accordion-item" data-state="closed">
+              <div data-block="accordion-title">Почему стоит выбрать автомобили до 160 л.с.?</div>
+              <div data-block="accordion-content">
+                <p>Автомобили мощностью до 160 л.с. освобождены от утильсбора при ввозе в Россию, что экономит от 50,000 до 350,000 рублей.</p>
+              </div>
+            </div>
+
+            <div data-block="accordion-item" data-state="closed">
+              <div data-block="accordion-title">Сколько времени занимает доставка?</div>
+              <div data-block="accordion-content">
+                <p>Полный цикл от выбора автомобиля до доставки в ваш город занимает 45-60 дней.</p>
+              </div>
+            </div>
+
+            <div data-block="accordion-item" data-state="closed">
+              <div data-block="accordion-title">Как происходит оплата?</div>
+              <div data-block="accordion-content">
+                <p>Мы принимаем оплату через VTB банк, что решает проблему международных переводов. Схема: депозит 30% при заказе, 70% после проверки.</p>
+              </div>
+            </div>
+
+            <div data-block="accordion-item" data-state="closed">
+              <div data-block="accordion-title">Есть ли гарантия качества?</div>
+              <div data-block="accordion-content">
+                <p>Да, мы проводим двойную проверку: в Китае и в Маньчжурии. Фото и видео отчет на каждом этапе.</p>
+              </div>
+            </div>
+          </div>
+
+          <div data-block="button" data-primary="true" data-url="https://t.me/autozq">
+            Задать вопрос в Telegram
+          </div>
+        ]]>
+      </turbo:content>
+    </item>
+
+  </channel>
+</rss>

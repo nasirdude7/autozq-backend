@@ -1,0 +1,3025 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoZQ 员工工作台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft YaHei', sans-serif;
+            background: #0a0e27;
+            color: #e0e0e0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            background: linear-gradient(135deg, #1a1f3a 0%, #2c3e50 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #3498db;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.8);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #e74c3c;
+        }
+
+        .menu-toggle {
+            background: rgba(52, 152, 219, 0.2);
+            border: 1px solid #3498db;
+            color: #3498db;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+
+        .menu-toggle:hover {
+            background: rgba(52, 152, 219, 0.4);
+        }
+
+        /* 主工作区 */
+        .workspace {
+            display: flex;
+            height: calc(100vh - 60px);
+            position: relative;
+        }
+
+        /* 左侧功能菜单（抽拉式） */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1a1f3a 0%, #0f1420 100%);
+            border-right: 1px solid #2c3e50;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-280px);
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+        }
+
+        .menu-item {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            color: #95a5a6;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: rgba(52, 152, 219, 0.1);
+            color: #3498db;
+        }
+
+        .menu-item.active {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+            border-left-color: #3498db;
+        }
+
+        .menu-icon {
+            font-size: 1.25rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* 数据分析仪表板（全屏覆盖层） */
+        .dashboard-overlay {
+            position: absolute;
+            top: 0;
+            left: 280px;
+            right: 0;
+            bottom: 0;
+            background: #0a0e27;
+            z-index: 90;
+            overflow-y: auto;
+            padding: 1.5rem 2rem;
+            display: none;
+        }
+
+        .dashboard-overlay.active {
+            display: block;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .dashboard-header h2 {
+            color: #e0e0e0;
+            font-size: 1.4rem;
+        }
+
+        .dashboard-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .dashboard-tab {
+            padding: 0.5rem 1.25rem;
+            background: #1a1f3a;
+            border: 1px solid #2c3e50;
+            color: #95a5a6;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .dashboard-tab:hover { color: #3498db; border-color: #3498db; }
+        .dashboard-tab.active { background: rgba(52,152,219,0.2); color: #3498db; border-color: #3498db; }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1a1f3a 0%, #12182e 100%);
+            border: 1px solid #2c3e50;
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .stat-card .stat-label {
+            color: #95a5a6;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .stat-value {
+            color: #3498db;
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-card .stat-sub {
+            color: #7f8c9a;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .chart-section {
+            background: linear-gradient(135deg, #1a1f3a 0%, #12182e 100%);
+            border: 1px solid #2c3e50;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-section h3 {
+            color: #e0e0e0;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* 简易横向条形图 */
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .bar-label {
+            width: 110px;
+            color: #bdc3c7;
+            font-size: 0.85rem;
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bar-track {
+            flex: 1;
+            background: #0f1420;
+            border-radius: 6px;
+            height: 22px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            border-radius: 6px;
+            transition: width 0.4s;
+        }
+
+        .bar-value {
+            width: 40px;
+            color: #95a5a6;
+            font-size: 0.85rem;
+        }
+
+        /* 迷你柱状趋势图 */
+        .spark-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 120px;
+            padding-top: 1rem;
+        }
+
+        .spark-bar-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            height: 100%;
+            justify-content: flex-end;
+        }
+
+        .spark-bar {
+            width: 100%;
+            max-width: 28px;
+            background: linear-gradient(180deg, #3498db, #2980b9);
+            border-radius: 3px 3px 0 0;
+            min-height: 2px;
+        }
+
+        .spark-label {
+            color: #7f8c9a;
+            font-size: 0.7rem;
+        }
+
+        /* 经销商表格 */
+        .dealer-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .dealer-table th {
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            color: #95a5a6;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #2c3e50;
+            font-weight: 600;
+        }
+
+        .dealer-table td {
+            padding: 0.6rem 0.75rem;
+            color: #bdc3c7;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #1a2035;
+        }
+
+        .dealer-table tr:hover td { background: rgba(52,152,219,0.05); }
+
+        .dashboard-loading {
+            text-align: center;
+            color: #7f8c9a;
+            padding: 3rem;
+        }
+
+        /* 通用模态框 */
+        .modal-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-backdrop.active { display: flex; }
+
+        .modal-box {
+            background: linear-gradient(135deg, #1a1f3a 0%, #12182e 100%);
+            border: 1px solid #2c3e50;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 480px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #2c3e50;
+        }
+
+        .modal-header h3 { color: #e0e0e0; font-size: 1.1rem; }
+
+        .modal-close {
+            cursor: pointer;
+            color: #95a5a6;
+            font-size: 1.2rem;
+            transition: color 0.2s;
+        }
+        .modal-close:hover { color: #e74c3c; }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        /* 可选标签（模态框内） */
+        .label-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid #2c3e50;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .label-option:hover { border-color: #3498db; background: rgba(52,152,219,0.08); }
+        .label-option.selected { border-color: #2ecc71; background: rgba(46,204,113,0.1); }
+        .label-option .check { color: #2ecc71; font-weight: 700; }
+
+        .modal-form-field { margin-bottom: 1rem; }
+        .modal-form-field label { display: block; color: #95a5a6; font-size: 0.85rem; margin-bottom: 0.35rem; }
+        .modal-form-field input, .modal-form-field select {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            background: #0f1420;
+            border: 1px solid #2c3e50;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+        .modal-form-field input:focus, .modal-form-field select:focus { outline: none; border-color: #3498db; }
+
+        .btn-primary {
+            padding: 0.6rem 1.25rem;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-danger { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+
+        /* 客户列表区 */
+        .customer-panel {
+            width: 320px;
+            background: #12182e;
+            border-right: 1px solid #2c3e50;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 1rem;
+            background: #1a1f3a;
+            border-bottom: 1px solid #2c3e50;
+        }
+
+        .panel-header h3 {
+            font-size: 1rem;
+            color: #ecf0f1;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 0.6rem;
+            background: #0a0e27;
+            border: 1px solid #34495e;
+            border-radius: 6px;
+            color: #ecf0f1;
+            font-size: 0.9rem;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .filter-tab {
+            padding: 0.4rem 0.75rem;
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid #34495e;
+            border-radius: 4px;
+            color: #95a5a6;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .filter-tab:hover {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+        }
+
+        .filter-tab.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .customer-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .customer-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #1a1f3a;
+            border: 1px solid #2c3e50;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .customer-item:hover {
+            background: #1f2640;
+            border-color: #3498db;
+            transform: translateX(2px);
+        }
+
+        .customer-item.active {
+            background: rgba(52, 152, 219, 0.2);
+            border-color: #3498db;
+        }
+
+        .customer-name {
+            font-size: 0.95rem;
+            color: #ecf0f1;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+
+        .customer-last-msg {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .customer-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+
+        .customer-labels {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .label-badge {
+            padding: 0.15rem 0.4rem;
+            background: rgba(52, 152, 219, 0.3);
+            border-radius: 3px;
+            font-size: 0.7rem;
+            color: #3498db;
+        }
+
+        .customer-time {
+            font-size: 0.7rem;
+            color: #7f8c8d;
+        }
+
+        /* 聊天区域 */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0f1420;
+        }
+
+        .chat-header {
+            padding: 1rem 1.5rem;
+            background: #1a1f3a;
+            border-bottom: 1px solid #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-customer-info h3 {
+            font-size: 1.1rem;
+            color: #ecf0f1;
+            margin-bottom: 0.25rem;
+        }
+
+        .chat-customer-status {
+            font-size: 0.85rem;
+            color: #95a5a6;
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(52, 152, 219, 0.2);
+            border: 1px solid #3498db;
+            color: #3498db;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            background: rgba(52, 152, 219, 0.4);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .message.outgoing {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .message.outgoing .message-avatar {
+            background: #27ae60;
+        }
+
+        .message-content {
+            max-width: 60%;
+        }
+
+        .message-bubble {
+            padding: 0.75rem 1rem;
+            background: #1a1f3a;
+            border-radius: 12px;
+            color: #ecf0f1;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.outgoing .message-bubble {
+            background: #2c3e50;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            margin-top: 0.25rem;
+            padding: 0 0.5rem;
+        }
+
+        .chat-input-area {
+            padding: 1rem 1.5rem;
+            background: #1a1f3a;
+            border-top: 1px solid #2c3e50;
+        }
+
+        .quick-replies {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            overflow-x: auto;
+        }
+
+        .quick-reply-btn {
+            padding: 0.4rem 0.75rem;
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid #34495e;
+            border-radius: 20px;
+            color: #3498db;
+            cursor: pointer;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .quick-reply-btn:hover {
+            background: rgba(52, 152, 219, 0.3);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 0.75rem;
+            background: #0a0e27;
+            border: 1px solid #34495e;
+            border-radius: 8px;
+            color: #ecf0f1;
+            resize: none;
+            font-size: 0.95rem;
+            font-family: inherit;
+            min-height: 44px;
+            max-height: 120px;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .send-btn {
+            padding: 0.75rem 1.5rem;
+            background: #3498db;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .send-btn:hover {
+            background: #2980b9;
+        }
+
+        /* 右侧客户信息面板 */
+        .info-panel {
+            width: 380px;
+            background: #12182e;
+            border-left: 1px solid #2c3e50;
+            overflow-y: auto;
+        }
+
+        .info-section {
+            padding: 1.5rem;
+            border-bottom: 1px solid #2c3e50;
+        }
+
+        .info-section h4 {
+            font-size: 0.95rem;
+            color: #3498db;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .info-field {
+            margin-bottom: 1rem;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 0.95rem;
+            color: #ecf0f1;
+        }
+
+        .label-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .label-tag {
+            padding: 0.4rem 0.75rem;
+            background: rgba(52, 152, 219, 0.2);
+            border: 1px solid #3498db;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #3498db;
+        }
+
+        .ai-insight {
+            padding: 1rem;
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 3px solid #3498db;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #95a5a6;
+            line-height: 1.6;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0e27;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #34495e;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a5f7f;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #7f8c8d;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* 产品库卡片网格 */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.2rem;
+            margin-top: 1rem;
+        }
+
+        .product-card {
+            background: #1a1f3a;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #2c3e50;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: #0f1729;
+        }
+
+        .product-info {
+            padding: 1rem;
+        }
+
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #ecf0f1;
+            line-height: 1.3;
+        }
+
+        .product-brand {
+            color: #3498db;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .stock-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .stock-badge.in-stock { background: rgba(46,204,113,0.15); color: #2ecc71; }
+        .stock-badge.pre-order { background: rgba(241,196,15,0.15); color: #f1c40f; }
+        .stock-badge.out-of-stock { background: rgba(231,76,60,0.15); color: #e74c3c; }
+
+        .product-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #27ae60;
+            margin: 0.5rem 0;
+        }
+
+        .product-specs {
+            font-size: 0.8rem;
+            color: #95a5a6;
+            line-height: 1.6;
+            margin-bottom: 0.8rem;
+            min-height: 2.4em;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 0.5rem;
+            padding-top: 0.8rem;
+            border-top: 1px solid #2c3e50;
+        }
+
+        .btn-send {
+            flex: 1;
+            padding: 0.5rem 0.8rem;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-send:hover { background: #2980b9; }
+        .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .products-toolbar {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-input, .filter-select {
+            padding: 0.5rem 0.8rem;
+            background: #0f1729;
+            border: 1px solid #2c3e50;
+            border-radius: 6px;
+            color: #ecf0f1;
+            font-size: 0.9rem;
+        }
+
+        .search-input { flex: 1; min-width: 200px; }
+        .filter-select { min-width: 120px; }
+        .search-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            <div class="logo">AutoZQ 工作台</div>
+        </div>
+        <div class="header-right">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <span id="userName">加载中...</span>
+            </div>
+            <button class="logout-btn" id="logoutBtn">退出</button>
+        </div>
+    </div>
+
+    <div class="workspace">
+        <!-- 左侧功能菜单 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-menu">
+                <div class="menu-item active" data-view="chat">
+                    <span class="menu-icon">💬</span>
+                    <span>客户对话</span>
+                </div>
+                <div class="menu-item" data-view="customers">
+                    <span class="menu-icon">👥</span>
+                    <span>客户管理</span>
+                </div>
+                <div class="menu-item" data-view="assignments">
+                    <span class="menu-icon">📋</span>
+                    <span>客户分配</span>
+                </div>
+                <div class="menu-item" data-view="labels">
+                    <span class="menu-icon">🏷️</span>
+                    <span>标签管理</span>
+                </div>
+                <div class="menu-item" data-view="analytics">
+                    <span class="menu-icon">📊</span>
+                    <span>数据分析</span>
+                </div>
+                <div class="menu-item" data-view="knowledge">
+                    <span class="menu-icon">📚</span>
+                    <span>知识库</span>
+                </div>
+                <div class="menu-item" data-view="products">
+                    <span class="menu-icon">🚗</span>
+                    <span>产品库</span>
+                </div>
+                <div class="menu-item" data-view="settings">
+                    <span class="menu-icon">⚙️</span>
+                    <span>系统设置</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 客户列表面板 -->
+        <div class="customer-panel">
+            <div class="panel-header">
+                <h3>客户列表</h3>
+                <input type="text" class="search-box" placeholder="搜索客户..." id="customerSearch">
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-filter="all">全部</button>
+                    <button class="filter-tab" data-filter="my">我的</button>
+                    <button class="filter-tab" data-filter="unassigned">未分配</button>
+                </div>
+            </div>
+            <div class="customer-list" id="customerList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">👥</div>
+                    <p>暂无客户</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 聊天区域 -->
+        <main class="chat-area">
+            <div class="chat-header" id="chatHeader" style="display:none;">
+                <div class="chat-customer-info">
+                    <h3 id="chatCustomerName">选择客户开始对话</h3>
+                    <div class="chat-customer-status" id="chatCustomerStatus"></div>
+                </div>
+                <div class="chat-actions">
+                    <button class="action-btn" id="translateToggle">🌐 翻译</button>
+                    <button class="action-btn" id="assignBtn">📌 分配</button>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="empty-state">
+                    <div class="empty-state-icon">💬</div>
+                    <p>选择一个客户开始对话</p>
+                </div>
+            </div>
+
+            <div class="chat-input-area" id="chatInputArea" style="display:none;">
+                <div class="quick-replies" id="quickReplies"></div>
+                <div id="attachPreview" style="display:none;align-items:center;gap:0.5rem;padding:0.4rem 0.6rem;margin-bottom:0.4rem;background:rgba(255,255,255,0.06);border-radius:8px;font-size:0.85rem;"></div>
+                <div class="input-row">
+                    <input type="file" id="attachInput" style="display:none;" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip" />
+                    <button class="action-btn" id="attachBtn" title="发送图片/文件" style="padding:0 0.7rem;">📎</button>
+                    <textarea class="message-input" id="messageInput" placeholder="输入消息..." rows="1"></textarea>
+                    <button class="send-btn" id="sendBtn">发送</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- 右侧客户信息面板 -->
+        <aside class="info-panel" id="infoPanel">
+            <div class="empty-state">
+                <div class="empty-state-icon">ℹ️</div>
+                <p>选择客户查看详情</p>
+            </div>
+        </aside>
+
+        <!-- 数据分析仪表板（全屏覆盖层） -->
+        <div class="dashboard-overlay" id="dashboardOverlay">
+            <div class="dashboard-header">
+                <h2 id="dashboardTitle">📊 数据分析</h2>
+                <button class="action-btn" onclick="closeDashboard()">✕ 关闭</button>
+            </div>
+            <div class="dashboard-tabs" id="dashboardTabs">
+                <div class="dashboard-tab active" data-tab="overview" onclick="switchDashboardTab('overview')">总览</div>
+                <div class="dashboard-tab" data-tab="trends" onclick="switchDashboardTab('trends')">趋势</div>
+                <div class="dashboard-tab" data-tab="distribution" onclick="switchDashboardTab('distribution')">客户分布</div>
+                <div class="dashboard-tab" data-tab="agents" onclick="switchDashboardTab('agents')">客服绩效</div>
+                <div class="dashboard-tab" data-tab="dealers" id="dealersTab" onclick="switchDashboardTab('dealers')" style="display:none;">🏢 B端经销商</div>
+            </div>
+            <div id="dashboardContent">
+                <div class="dashboard-loading">加载中...</div>
+            </div>
+        </div>
+
+        <!-- 通用模态框 -->
+        <div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+            <div class="modal-box" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3 id="modalTitle">标题</h3>
+                    <span class="modal-close" onclick="closeModal()">✕</span>
+                </div>
+                <div class="modal-body" id="modalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API配置 —— 地址自适应：开发预览(前端:8080)指向本地后端:3001；
+        // 通过隧道/后端直接托管时同源(window.location.origin)。
+        const API_BASE = window.API_BASE
+            || (window.location.port === '8080' ? 'http://localhost:3001' : window.location.origin);
+        let authToken = localStorage.getItem('staff_token');
+        let currentUser = null;
+
+        // 初始化
+        async function init() {
+            if (!authToken) {
+                window.location.href = '/staff-login.html';
+                return;
+            }
+
+            try {
+                await loadCurrentUser();
+                await loadCustomers();
+                setupEventListeners();
+            } catch (error) {
+                console.error('初始化失败:', error);
+                if (error.message === 'Unauthorized') {
+                    localStorage.removeItem('staff_token');
+                    window.location.href = '/staff-login.html';
+                }
+            }
+        }
+
+        // 加载当前用户信息
+        async function loadCurrentUser() {
+            const response = await fetch(`${API_BASE}/api/staff/me`, {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Unauthorized');
+            }
+
+            const data = await response.json();
+            currentUser = data.data;
+
+            // 更新UI
+            document.getElementById('userName').textContent = currentUser.full_name;
+            document.getElementById('userAvatar').textContent = currentUser.full_name.charAt(0);
+        }
+
+        // 加载客户列表
+        async function loadCustomers(filter = 'all') {
+            try {
+                let url = `${API_BASE}/api/sales/customers`;
+
+                if (filter === 'my') {
+                    url = `${API_BASE}/api/assignments/my-customers`;
+                } else if (filter === 'unassigned') {
+                    url = `${API_BASE}/api/assignments/unassigned`;
+                }
+
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('加载客户失败');
+
+                const data = await response.json();
+                const customers = data.data || [];
+
+                renderCustomerList(customers);
+            } catch (error) {
+                console.error('加载客户失败:', error);
+                alert('加载客户列表失败');
+            }
+        }
+
+        // 渲染客户列表
+        function renderCustomerList(customers) {
+            const listEl = document.getElementById('customerList');
+
+            if (!customers || customers.length === 0) {
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👥</div>
+                        <p>暂无客户</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = customers.map(customer => `
+                <div class="customer-item" data-id="${customer.id}">
+                    <div class="customer-name">${escapeHtml(customer.name || customer.phone || 'Unknown')}</div>
+                    <div class="customer-last-msg">${escapeHtml(customer.last_message || '暂无消息')}</div>
+                    <div class="customer-meta">
+                        <div class="customer-labels">
+                            ${customer.labels ? customer.labels.split(',').slice(0, 2).map(label =>
+                                `<span class="label-badge">${escapeHtml(label)}</span>`
+                            ).join('') : ''}
+                        </div>
+                        <span class="customer-time">${formatTime(customer.last_contact_at)}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // 绑定点击事件
+            document.querySelectorAll('.customer-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.customer-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    loadCustomerChat(item.dataset.id);
+                });
+            });
+        }
+
+        // 加载客户对话
+        async function loadCustomerChat(customerId) {
+            currentCustomerId = customerId;
+
+            try {
+                // 加载客户详情
+                const customerResponse = await fetch(`${API_BASE}/api/sales/customers/${customerId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const customerData = await customerResponse.json();
+                const customer = customerData.data;
+
+                // 更新聊天头部
+                document.getElementById('chatHeader').style.display = 'flex';
+                document.getElementById('chatCustomerName').textContent = customer.name || customer.phone;
+                document.getElementById('chatCustomerStatus').textContent = customer.source || '未知来源';
+                document.getElementById('chatInputArea').style.display = 'block';
+
+                // 加载消息历史
+                const messagesResponse = await fetch(`${API_BASE}/api/sales/chat/conversations/${customerId}/messages`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const messagesData = await messagesResponse.json();
+                const messages = messagesData.data || [];
+
+                renderMessages(messages);
+
+                // 加载快捷回复
+                await loadQuickReplies();
+
+                // 加载客户信息面板
+                renderCustomerInfo(customer);
+
+            } catch (error) {
+                console.error('加载对话失败:', error);
+                alert('加载对话失败');
+            }
+        }
+
+        // 加载快捷回复
+        async function loadQuickReplies() {
+            try {
+                const response = await fetch(`${API_BASE}/api/quick-replies?language=zh`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                const replies = data.data || [];
+
+                const quickRepliesEl = document.getElementById('quickReplies');
+
+                if (replies.length === 0) {
+                    quickRepliesEl.innerHTML = '';
+                    return;
+                }
+
+                // 显示前6个最常用的快捷回复
+                quickRepliesEl.innerHTML = replies.slice(0, 6).map(reply => `
+                    <button class="quick-reply-btn" data-id="${reply.id}" data-content="${escapeHtml(reply.content)}">
+                        ${escapeHtml(reply.title)}
+                    </button>
+                `).join('');
+
+                // 绑定点击事件
+                document.querySelectorAll('.quick-reply-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const content = btn.dataset.content;
+                        const replyId = btn.dataset.id;
+
+                        // 填充到输入框
+                        document.getElementById('messageInput').value = content;
+
+                        // 增加使用计数
+                        try {
+                            await fetch(`${API_BASE}/api/quick-replies/${replyId}/use`, {
+                                method: 'POST',
+                                headers: { 'Authorization': `Bearer ${authToken}` }
+                            });
+                        } catch (error) {
+                            console.error('更新使用计数失败:', error);
+                        }
+                    });
+                });
+
+            } catch (error) {
+                console.error('加载快捷回复失败:', error);
+            }
+        }
+
+        // 翻译当前对话
+        async function translateCurrentConversation() {
+            if (!currentCustomerId) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/messages/translate-conversation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        conversation_id: currentCustomerId,
+                        target_lang: 'Chinese'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || '翻译失败');
+                }
+
+                const messages = data.data || [];
+                renderMessages(messages, true);
+
+            } catch (error) {
+                console.error('翻译对话失败:', error);
+                alert('翻译失败：' + error.message);
+            }
+        }
+
+        // 渲染消息列表
+        function renderMessages(messages, showTranslation = false) {
+            const messagesEl = document.getElementById('chatMessages');
+
+            if (!messages || messages.length === 0) {
+                messagesEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💬</div>
+                        <p>暂无对话记录</p>
+                    </div>
+                `;
+                return;
+            }
+
+            messagesEl.innerHTML = messages.map(msg => {
+                // 坐席/系统消息靠右（outgoing），客户消息靠左。schema 用 sender_type（agent/customer/system）
+                const isOutgoing = msg.sender_type === 'agent' || msg.sender_type === 'system';
+                const displayContent = showTranslation && msg.translated_content
+                    ? msg.translated_content
+                    : msg.content;
+
+                // 附件（图片/文件）渲染
+                const att = msg.attachments || null;
+                let mediaHtml = '';
+                if (att && att.url) {
+                    if (msg.message_type === 'image') {
+                        mediaHtml = `<a href="${escapeHtml(att.url)}" target="_blank" rel="noopener">
+                            <img src="${escapeHtml(att.url)}" alt="${escapeHtml(att.filename || 'image')}"
+                                 style="max-width:220px;max-height:220px;border-radius:8px;display:block;margin-bottom:0.35rem;" />
+                        </a>`;
+                    } else if (msg.message_type === 'file') {
+                        mediaHtml = `<a href="${escapeHtml(att.url)}" target="_blank" rel="noopener"
+                            style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:rgba(255,255,255,0.06);border-radius:8px;text-decoration:none;color:inherit;margin-bottom:0.35rem;">
+                            <span style="font-size:1.4rem;">📎</span>
+                            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">${escapeHtml(att.filename || '文件')}</span>
+                        </a>`;
+                    }
+                }
+                const avatarChar = isOutgoing ? ((currentUser && currentUser.full_name) ? currentUser.full_name.charAt(0) : 'A') : 'C';
+
+                return `
+                    <div class="message ${isOutgoing ? 'outgoing' : ''}">
+                        <div class="message-avatar">${avatarChar}</div>
+                        <div class="message-content">
+                            <div class="message-bubble">
+                                ${mediaHtml}
+                                ${displayContent ? escapeHtml(displayContent) : ''}
+                                ${showTranslation && msg.translated_content && msg.translated_content !== msg.content ?
+                                    `<div style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.1);font-size:0.85rem;color:#95a5a6;">
+                                        原文: ${escapeHtml(msg.content)}
+                                    </div>` : ''
+                                }
+                            </div>
+                            <div class="message-time">${formatDateTime(msg.created_at)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        // 渲染客户信息面板
+        function renderCustomerInfo(customer) {
+            const infoEl = document.getElementById('infoPanel');
+
+            infoEl.innerHTML = `
+                <div class="info-section">
+                    <h4>📇 基本信息</h4>
+                    <div class="info-field">
+                        <div class="info-label">客户姓名</div>
+                        <div class="info-value">${escapeHtml(customer.name || '-')}</div>
+                    </div>
+                    <div class="info-field">
+                        <div class="info-label">联系电话</div>
+                        <div class="info-value">${escapeHtml(customer.phone || '-')}</div>
+                    </div>
+                    <div class="info-field">
+                        <div class="info-label">电子邮箱</div>
+                        <div class="info-value">${escapeHtml(customer.email || '-')}</div>
+                    </div>
+                    <div class="info-field">
+                        <div class="info-label">来源渠道</div>
+                        <div class="info-value">${escapeHtml(customer.source || '-')}</div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h4>🏷️ 客户标签</h4>
+                    <div class="label-list" id="customerLabels">
+                        <span class="label-tag">加载中...</span>
+                    </div>
+                    <button class="action-btn" id="manageLabelsBtn" style="margin-top:0.75rem;width:100%;" onclick="openLabelPicker('${customer.id}')">
+                        ＋ 添加/管理标签
+                    </button>
+                </div>
+
+                <div class="info-section">
+                    <h4>🤖 AI 客户分析</h4>
+                    <div class="ai-insight" id="aiInsight">
+                        正在分析客户画像...
+                    </div>
+                    <button class="action-btn" id="refreshAnalysisBtn" style="margin-top:0.75rem;width:100%;">
+                        🔄 重新分析
+                    </button>
+                </div>
+
+                <div class="info-section">
+                    <h4>📊 互动统计</h4>
+                    <div class="info-field">
+                        <div class="info-label">总消息数</div>
+                        <div class="info-value">${customer.message_count || 0}</div>
+                    </div>
+                    <div class="info-field">
+                        <div class="info-label">首次联系</div>
+                        <div class="info-value">${formatDate(customer.first_contact_at)}</div>
+                    </div>
+                    <div class="info-field">
+                        <div class="info-label">最后联系</div>
+                        <div class="info-value">${formatDate(customer.last_contact_at)}</div>
+                    </div>
+                </div>
+            `;
+
+            // 加载客户标签
+            loadCustomerLabels(customer.id);
+
+            // 加载AI分析
+            loadCustomerAnalysis(customer.id);
+        }
+
+        // 加载客户AI分析
+        async function loadCustomerAnalysis(customerId) {
+            const insightEl = document.getElementById('aiInsight');
+            insightEl.innerHTML = '正在加载分析...';
+
+            try {
+                // 先尝试获取已有的分析结果
+                let response = await fetch(`${API_BASE}/api/analysis/customer/${customerId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                let data = await response.json();
+
+                // 如果没有分析结果，触发新分析
+                if (!data.success) {
+                    insightEl.innerHTML = '正在生成AI分析...';
+
+                    response = await fetch(`${API_BASE}/api/analysis/customer/${customerId}`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+
+                    data = await response.json();
+                }
+
+                if (data.success && data.data) {
+                    const analysis = data.data.analysis_data || data.data.analysis;
+                    renderAIAnalysis(analysis);
+                } else {
+                    insightEl.innerHTML = '分析失败，请稍后重试';
+                }
+
+            } catch (error) {
+                console.error('加载AI分析失败:', error);
+                insightEl.innerHTML = 'AI分析暂时不可用';
+            }
+
+            // 绑定重新分析按钮
+            const refreshBtn = document.getElementById('refreshAnalysisBtn');
+            if (refreshBtn) {
+                refreshBtn.onclick = async () => {
+                    refreshBtn.disabled = true;
+                    refreshBtn.textContent = '🔄 分析中...';
+                    await loadCustomerAnalysis(customerId);
+                    refreshBtn.disabled = false;
+                    refreshBtn.textContent = '🔄 重新分析';
+                };
+            }
+        }
+
+        // 渲染AI分析结果
+        function renderAIAnalysis(analysis) {
+            const insightEl = document.getElementById('aiInsight');
+
+            if (!analysis) {
+                insightEl.innerHTML = '暂无分析数据';
+                return;
+            }
+
+            const intentColor =
+                analysis.intent_score >= 70 ? '#27ae60' :
+                analysis.intent_score >= 40 ? '#f39c12' : '#e74c3c';
+
+            insightEl.innerHTML = `
+                <div style="margin-bottom:1rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                        <span style="font-weight:600;color:#ecf0f1;">购买意向</span>
+                        <span style="color:${intentColor};font-weight:700;font-size:1.1rem;">${analysis.intent_score}/100</span>
+                    </div>
+                    <div style="background:#0a0e27;height:8px;border-radius:4px;overflow:hidden;">
+                        <div style="background:${intentColor};height:100%;width:${analysis.intent_score}%;transition:width 0.5s;"></div>
+                    </div>
+                    <div style="margin-top:0.25rem;font-size:0.85rem;color:#95a5a6;">
+                        ${analysis.intent_level || '未知'} · ${analysis.customer_type || '未知'}
+                    </div>
+                </div>
+
+                <div style="margin-bottom:1rem;">
+                    <div style="font-weight:600;color:#ecf0f1;margin-bottom:0.5rem;">📊 客户特征</div>
+                    <div style="font-size:0.9rem;line-height:1.6;color:#bdc3c7;">
+                        ${analysis.summary || '暂无总结'}
+                    </div>
+                </div>
+
+                ${analysis.interested_categories && analysis.interested_categories.length > 0 ? `
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-weight:600;color:#ecf0f1;margin-bottom:0.5rem;">🚗 感兴趣车型</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+                            ${analysis.interested_categories.map(cat =>
+                                `<span style="padding:0.25rem 0.5rem;background:rgba(52,152,219,0.2);border-radius:4px;font-size:0.85rem;color:#3498db;">${escapeHtml(cat)}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${analysis.key_concerns && analysis.key_concerns.length > 0 ? `
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-weight:600;color:#ecf0f1;margin-bottom:0.5rem;">💡 关注点</div>
+                        <ul style="margin:0;padding-left:1.5rem;font-size:0.9rem;color:#bdc3c7;">
+                            ${analysis.key_concerns.map(concern =>
+                                `<li style="margin-bottom:0.25rem;">${escapeHtml(concern)}</li>`
+                            ).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+
+                ${analysis.budget_range ? `
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-weight:600;color:#ecf0f1;margin-bottom:0.25rem;">💰 预算范围</div>
+                        <div style="font-size:0.9rem;color:#bdc3c7;">${escapeHtml(analysis.budget_range)}</div>
+                    </div>
+                ` : ''}
+
+                ${analysis.urgency ? `
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-weight:600;color:#ecf0f1;margin-bottom:0.25rem;">⏰ 紧急程度</div>
+                        <div style="font-size:0.9rem;color:#bdc3c7;">${escapeHtml(analysis.urgency)}</div>
+                    </div>
+                ` : ''}
+
+                ${analysis.next_action ? `
+                    <div style="padding:0.75rem;background:rgba(46,204,113,0.1);border-left:3px solid #2ecc71;border-radius:4px;">
+                        <div style="font-weight:600;color:#2ecc71;margin-bottom:0.25rem;">💼 建议行动</div>
+                        <div style="font-size:0.9rem;color:#bdc3c7;">${escapeHtml(analysis.next_action)}</div>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // 加载客户标签
+        async function loadCustomerLabels(customerId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/sales/customers/${customerId}/labels`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                const labels = data.data || [];
+
+                const labelsEl = document.getElementById('customerLabels');
+                if (!labelsEl) return; // 信息面板未打开时无需渲染
+                if (labels.length === 0) {
+                    labelsEl.innerHTML = '<span style="color:#7f8c8d;">暂无标签</span>';
+                } else {
+                    labelsEl.innerHTML = labels.map(label =>
+                        `<span class="label-tag" style="${label.color ? `background:${hexToRgba(label.color,0.2)};border-color:${label.color};color:${label.color};` : ''}">
+                            ${escapeHtml(label.name)}
+                            <span style="cursor:pointer;margin-left:0.4rem;opacity:0.7;" onclick="removeCustomerLabel('${customerId}','${label.id}')" title="移除">✕</span>
+                        </span>`
+                    ).join('');
+                }
+            } catch (error) {
+                console.error('加载标签失败:', error);
+            }
+        }
+
+        // 设置事件监听
+        function setupEventListeners() {
+            // 菜单切换
+            document.getElementById('menuToggle').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('collapsed');
+            });
+
+            // 退出登录
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                if (confirm('确定要退出登录吗？')) {
+                    localStorage.removeItem('staff_token');
+                    window.location.href = '/staff-login.html';
+                }
+            });
+
+            // 客户筛选
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    loadCustomers(tab.dataset.filter);
+                });
+            });
+
+            // 发送消息
+            document.getElementById('sendBtn').addEventListener('click', sendMessage);
+            document.getElementById('messageInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // 附件（图片/文件）：点击 📎 打开文件选择，选中后上传并预览，随发送一起发出
+            document.getElementById('attachBtn').addEventListener('click', () => {
+                document.getElementById('attachInput').click();
+            });
+            document.getElementById('attachInput').addEventListener('change', handleAttachSelect);
+
+            // 翻译切换
+            document.getElementById('translateToggle').addEventListener('click', async () => {
+                translateEnabled = !translateEnabled;
+                const btn = document.getElementById('translateToggle');
+
+                if (translateEnabled) {
+                    btn.style.background = '#27ae60';
+                    btn.style.borderColor = '#27ae60';
+                    btn.textContent = '🌐 翻译开启';
+
+                    // 翻译当前对话
+                    if (currentCustomerId) {
+                        await translateCurrentConversation();
+                    }
+                } else {
+                    btn.style.background = 'rgba(52, 152, 219, 0.2)';
+                    btn.style.borderColor = '#3498db';
+                    btn.textContent = '🌐 翻译';
+
+                    // 重新加载原始消息
+                    if (currentCustomerId) {
+                        await loadCustomerChat(currentCustomerId);
+                    }
+                }
+            });
+
+            // 功能菜单切换
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const view = item.dataset.view;
+                    // 高亮当前菜单项
+                    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+                    item.classList.add('active');
+
+                    if (view === 'analytics') {
+                        openDashboard();
+                    } else if (view === 'labels') {
+                        openLabelsManager();
+                    } else if (view === 'assignments') {
+                        openAssignmentsView();
+                    } else if (view === 'customers') {
+                        openCustomersView();
+                    } else if (view === 'settings') {
+                        openSettingsView();
+                    } else if (view === 'products') {
+                        openProductsView();
+                    } else if (view === 'chat') {
+                        closeDashboard();
+                    } else {
+                        closeDashboard();
+                        alert(`功能 "${item.textContent.trim()}" 开发中...`);
+                    }
+                });
+            });
+        }
+
+        // 全局状态
+        let translateEnabled = false;
+        let currentCustomerId = null;
+        let pendingAttachment = null;  // { url, filename, mime, size, message_type }
+
+        // 选择附件 → 上传 → 预览
+        async function handleAttachSelect(e) {
+            const file = e.target.files && e.target.files[0];
+            e.target.value = '';  // 允许重复选同一文件
+            if (!file) return;
+
+            const preview = document.getElementById('attachPreview');
+            preview.style.display = 'flex';
+            preview.innerHTML = `<span>⏳ 上传中… ${escapeHtml(file.name)}</span>`;
+
+            try {
+                const form = new FormData();
+                form.append('file', file);
+                const resp = await fetch(`${API_BASE}/api/messages/upload`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    body: form
+                });
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.error || '上传失败');
+
+                pendingAttachment = data.data;
+                const icon = pendingAttachment.message_type === 'image' ? '🖼️' : '📎';
+                preview.innerHTML = `
+                    <span>${icon} ${escapeHtml(pendingAttachment.filename)}</span>
+                    <button class="action-btn" style="padding:0 0.5rem;" onclick="clearAttach()">✕</button>
+                `;
+            } catch (err) {
+                console.error('附件上传失败:', err);
+                preview.innerHTML = `<span style="color:#e74c3c;">上传失败：${escapeHtml(err.message)}</span>`;
+                pendingAttachment = null;
+            }
+        }
+
+        function clearAttach() {
+            pendingAttachment = null;
+            const preview = document.getElementById('attachPreview');
+            preview.style.display = 'none';
+            preview.innerHTML = '';
+        }
+
+        // 发送消息（支持纯文本 / 图片 / 文件 + 说明文字）
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+
+            // 无文本且无附件 → 什么都不做
+            if (!content && !pendingAttachment) return;
+
+            const activeCustomer = document.querySelector('.customer-item.active');
+            if (!activeCustomer) {
+                alert('请先选择客户');
+                return;
+            }
+
+            const customerId = activeCustomer.dataset.id;
+            const payload = {
+                customer_id: customerId,
+                content: content,
+                auto_translate: translateEnabled
+            };
+            if (pendingAttachment) {
+                payload.message_type = pendingAttachment.message_type;  // image | file
+                payload.attachments = pendingAttachment;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/messages/send`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || '发送失败');
+                }
+
+                // 送达失败提示（消息已存档但未发到客户）
+                if (data.data && data.data.delivered === false) {
+                    alert('消息已保存，但未成功发送给客户：' + (data.data.delivery_error || '未知原因'));
+                }
+
+                // 清空输入框和附件
+                input.value = '';
+                clearAttach();
+
+                // 重新加载消息
+                await loadCustomerChat(customerId);
+
+            } catch (error) {
+                console.error('发送消息失败:', error);
+                alert('发送失败：' + error.message);
+            }
+        }
+
+        // 工具函数
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 3600000) { // 1小时内
+                return Math.floor(diff / 60000) + '分钟前';
+            } else if (diff < 86400000) { // 24小时内
+                return Math.floor(diff / 3600000) + '小时前';
+            } else {
+                return date.toLocaleDateString('zh-CN');
+            }
+        }
+
+        function formatDateTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatDate(timestamp) {
+            if (!timestamp) return '-';
+            return new Date(timestamp).toLocaleDateString('zh-CN');
+        }
+
+        // ============ 通用模态框 ============
+        function openModal(title, bodyHtml) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = bodyHtml;
+            document.getElementById('modalBackdrop').classList.add('active');
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== document.getElementById('modalBackdrop') && event.type === 'click') {
+                // 点击背景才关闭；点击内容不关闭（已由 stopPropagation 处理）
+            }
+            document.getElementById('modalBackdrop').classList.remove('active');
+        }
+
+        function hexToRgba(hex, alpha) {
+            if (!hex || !hex.startsWith('#')) return `rgba(52,152,219,${alpha})`;
+            const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+            return `rgba(${r},${g},${b},${alpha})`;
+        }
+
+        // ============ 客户标签管理 ============
+        async function openLabelPicker(customerId) {
+            openModal('管理客户标签', '<div class="dashboard-loading">加载中...</div>');
+            try {
+                // 并行获取：全部可用标签 + 客户当前标签
+                const [allRes, curRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/labels`, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.json()),
+                    fetch(`${API_BASE}/api/sales/customers/${customerId}/labels`, { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.json())
+                ]);
+                const allLabels = allRes.data || [];
+                const currentIds = new Set((curRes.data || []).map(l => l.id));
+
+                const body = `
+                    <div style="margin-bottom:1rem;color:#95a5a6;font-size:0.85rem;">点击标签可切换是否应用到该客户</div>
+                    <div id="labelOptions">
+                        ${allLabels.map(l => `
+                            <div class="label-option ${currentIds.has(l.id) ? 'selected' : ''}"
+                                 data-label-id="${l.id}" data-selected="${currentIds.has(l.id)}"
+                                 onclick="toggleCustomerLabel('${customerId}', this)">
+                                <span style="color:${l.color || '#3498db'};">${escapeHtml(l.name)}</span>
+                                <span class="check">${currentIds.has(l.id) ? '✓' : ''}</span>
+                            </div>
+                        `).join('')}
+                    </div>`;
+                openModal('管理客户标签', body);
+            } catch (e) {
+                openModal('管理客户标签', `<div style="color:#e74c3c;">加载失败: ${e.message}</div>`);
+            }
+        }
+
+        async function toggleCustomerLabel(customerId, el) {
+            const labelId = el.dataset.labelId;
+            const isSelected = el.dataset.selected === 'true';
+            try {
+                if (isSelected) {
+                    await fetch(`${API_BASE}/api/sales/customers/${customerId}/labels/${labelId}`, {
+                        method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    el.dataset.selected = 'false';
+                    el.classList.remove('selected');
+                    el.querySelector('.check').textContent = '';
+                } else {
+                    await fetch(`${API_BASE}/api/sales/customers/${customerId}/labels`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                        body: JSON.stringify({ label_id: labelId })
+                    });
+                    el.dataset.selected = 'true';
+                    el.classList.add('selected');
+                    el.querySelector('.check').textContent = '✓';
+                }
+                // 刷新信息面板的标签显示
+                loadCustomerLabels(customerId);
+            } catch (e) {
+                alert('操作失败: ' + e.message);
+            }
+        }
+
+        async function removeCustomerLabel(customerId, labelId) {
+            try {
+                await fetch(`${API_BASE}/api/sales/customers/${customerId}/labels/${labelId}`, {
+                    method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                loadCustomerLabels(customerId);
+            } catch (e) {
+                alert('移除失败: ' + e.message);
+            }
+        }
+
+        // ============ 数据分析仪表板 ============
+        let currentDashboardTab = 'overview';
+
+        function openDashboard() {
+            document.getElementById('dashboardOverlay').classList.add('active');
+            // 超管才显示 B端经销商 tab
+            const isSuperAdmin = currentUser && currentUser.role === 'super_admin';
+            document.getElementById('dealersTab').style.display = isSuperAdmin ? 'block' : 'none';
+            switchDashboardTab('overview');
+        }
+
+        function closeDashboard() {
+            document.getElementById('dashboardOverlay').classList.remove('active');
+        }
+
+        function switchDashboardTab(tab) {
+            currentDashboardTab = tab;
+            document.querySelectorAll('.dashboard-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.tab === tab);
+            });
+            const content = document.getElementById('dashboardContent');
+            content.innerHTML = '<div class="dashboard-loading">加载中...</div>';
+
+            if (tab === 'overview') loadDashboardOverview();
+            else if (tab === 'trends') loadDashboardTrends();
+            else if (tab === 'distribution') loadDashboardDistribution();
+            else if (tab === 'agents') loadDashboardAgents();
+            else if (tab === 'dealers') loadDashboardDealers();
+        }
+
+        async function apiGet(path) {
+            const res = await fetch(`${API_BASE}${path}`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+            return res.json();
+        }
+
+        function statCard(label, value, sub) {
+            return `<div class="stat-card">
+                <div class="stat-label">${label}</div>
+                <div class="stat-value">${value}</div>
+                ${sub ? `<div class="stat-sub">${sub}</div>` : ''}
+            </div>`;
+        }
+
+        async function loadDashboardOverview() {
+            const data = await apiGet('/api/analytics/overview');
+            if (!data.success) {
+                document.getElementById('dashboardContent').innerHTML = `<div class="dashboard-loading">加载失败: ${data.error || ''}</div>`;
+                return;
+            }
+            const d = data.data;
+            const html = `
+                <div class="stat-grid">
+                    ${statCard('客户总数', d.customers.total, `今日新增 ${d.customers.new_today} · 本周 ${d.customers.new_this_week}`)}
+                    ${statCard('未分配客户', d.customers.unassigned, '待分配跟进')}
+                    ${statCard('活跃会话', d.conversations.active, `未读 ${d.conversations.unread} 个会话`)}
+                    ${statCard('今日消息', d.messages.total_today, `收 ${d.messages.from_customer} · 发 ${d.messages.from_agent}`)}
+                    ${statCard('报价单', d.business.total_quotations, `已成交 ${d.business.accepted_quotations}`)}
+                    ${statCard('订单总额', '$' + Number(d.business.total_revenue).toLocaleString(), `共 ${d.business.total_orders} 笔订单`)}
+                </div>
+                <div class="chart-section">
+                    <h3>数据范围：${d.scope === 'all' ? '全部客户' : '我的客户'}</h3>
+                    <div class="stat-sub">更新时间：${formatDateTime(d.generated_at)}</div>
+                </div>`;
+            document.getElementById('dashboardContent').innerHTML = html;
+        }
+
+        function sparkChart(rows, valueKey, labelKey) {
+            if (!rows || rows.length === 0) return '<div class="stat-sub">暂无数据</div>';
+            const max = Math.max(...rows.map(r => Number(r[valueKey]) || 0), 1);
+            return `<div class="spark-chart">
+                ${rows.map(r => {
+                    const val = Number(r[valueKey]) || 0;
+                    const h = Math.round((val / max) * 100);
+                    const label = new Date(r[labelKey]).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
+                    return `<div class="spark-bar-group" title="${label}: ${val}">
+                        <div class="spark-bar" style="height:${h}%"></div>
+                        <div class="spark-label">${label}</div>
+                    </div>`;
+                }).join('')}
+            </div>`;
+        }
+
+        async function loadDashboardTrends() {
+            const data = await apiGet('/api/analytics/trends?days=30');
+            if (!data.success) {
+                document.getElementById('dashboardContent').innerHTML = `<div class="dashboard-loading">加载失败</div>`;
+                return;
+            }
+            const d = data.data;
+            const html = `
+                <div class="chart-section">
+                    <h3>客户新增趋势（最近 ${d.days} 天）</h3>
+                    ${sparkChart(d.customer_trend, 'count', 'date')}
+                </div>
+                <div class="chart-section">
+                    <h3>消息量趋势（最近 ${d.days} 天）</h3>
+                    ${sparkChart(d.message_trend, 'total', 'date')}
+                </div>`;
+            document.getElementById('dashboardContent').innerHTML = html;
+        }
+
+        function barChart(rows, labelKey, valueKey) {
+            if (!rows || rows.length === 0) return '<div class="stat-sub">暂无数据</div>';
+            const max = Math.max(...rows.map(r => Number(r[valueKey]) || 0), 1);
+            return rows.map(r => {
+                const val = Number(r[valueKey]) || 0;
+                const w = Math.round((val / max) * 100);
+                return `<div class="bar-row">
+                    <div class="bar-label">${r[labelKey]}</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:${w}%"></div></div>
+                    <div class="bar-value">${val}</div>
+                </div>`;
+            }).join('');
+        }
+
+        async function loadDashboardDistribution() {
+            const data = await apiGet('/api/analytics/distribution');
+            if (!data.success) {
+                document.getElementById('dashboardContent').innerHTML = `<div class="dashboard-loading">加载失败</div>`;
+                return;
+            }
+            const d = data.data;
+            const html = `
+                <div class="chart-section">
+                    <h3>客户来源分布</h3>
+                    ${barChart(d.by_source, 'source', 'count')}
+                </div>
+                <div class="chart-section">
+                    <h3>国家/地区分布（Top 10）</h3>
+                    ${barChart(d.by_country, 'country', 'count')}
+                </div>
+                <div class="chart-section">
+                    <h3>语言分布</h3>
+                    ${barChart(d.by_language, 'language', 'count')}
+                </div>
+                <div class="chart-section">
+                    <h3>意向等级（AI 分析）</h3>
+                    ${barChart(d.by_intent, 'intent_level', 'count')}
+                </div>`;
+            document.getElementById('dashboardContent').innerHTML = html;
+        }
+
+        async function loadDashboardAgents() {
+            const data = await apiGet('/api/analytics/agents');
+            if (!data.success) {
+                document.getElementById('dashboardContent').innerHTML = `<div class="dashboard-loading">加载失败: ${data.error || '权限不足'}</div>`;
+                return;
+            }
+            const rows = data.data;
+            const roleMap = { super_admin: '超管', manager: '主管', agent: '坐席' };
+            const html = `
+                <div class="chart-section">
+                    <h3>客服绩效排行</h3>
+                    <table class="dealer-table">
+                        <thead><tr>
+                            <th>姓名</th><th>角色</th><th>负责客户</th><th>会话数</th><th>活跃会话</th><th>近7天发送</th>
+                        </tr></thead>
+                        <tbody>
+                            ${rows.map(a => `<tr>
+                                <td>${a.full_name}</td>
+                                <td>${roleMap[a.role] || a.role}</td>
+                                <td>${a.customer_count}</td>
+                                <td>${a.conversation_count}</td>
+                                <td>${a.active_conversations}</td>
+                                <td>${a.messages_sent_7d}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            document.getElementById('dashboardContent').innerHTML = html;
+        }
+
+        async function loadDashboardDealers() {
+            const [overview, list] = await Promise.all([
+                apiGet('/api/dealers/overview'),
+                apiGet('/api/dealers')
+            ]);
+            if (!overview.success || !list.success) {
+                document.getElementById('dashboardContent').innerHTML = `<div class="dashboard-loading">加载失败: ${overview.error || list.error || '权限不足'}</div>`;
+                return;
+            }
+            const o = overview.data;
+            const dealers = list.data;
+            const intentMap = { high: '🔥高', medium: '⭐中', low: '❄️低' };
+            const html = `
+                <div class="stat-grid">
+                    ${statCard('经销商总数', o.total, `本月新增 ${o.new_this_month || 0}`)}
+                    ${statCard('本周活跃', o.active_this_week || 0, '近7天有联系')}
+                    ${statCard('待跟进', o.needs_followup || 0, '超14天未联系')}
+                    ${statCard('订单总额', '$' + Number(o.total_revenue || 0).toLocaleString(), `共 ${o.total_orders || 0} 笔`)}
+                </div>
+                <div class="chart-section">
+                    <h3>B端经销商列表</h3>
+                    ${dealers.length === 0 ? '<div class="stat-sub">暂无经销商。可在客户信息面板中标记客户为 B端经销商。</div>' : `
+                    <table class="dealer-table">
+                        <thead><tr>
+                            <th>名称</th><th>国家</th><th>负责人</th><th>意向</th><th>订单数</th><th>成交额</th><th>最近联系</th>
+                        </tr></thead>
+                        <tbody>
+                            ${dealers.map(d => `<tr>
+                                <td>${d.name || '-'}</td>
+                                <td>${d.country || '-'}</td>
+                                <td>${d.assigned_agent || '未分配'}</td>
+                                <td>${intentMap[d.intent_level] || '-'}</td>
+                                <td>${d.order_count}</td>
+                                <td>$${Number(d.total_amount).toLocaleString()}</td>
+                                <td>${formatDateTime(d.last_contact_at)}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>`}
+                </div>`;
+            document.getElementById('dashboardContent').innerHTML = html;
+        }
+
+        // ============ 管理视图（复用仪表板覆盖层） ============
+        function openManagementView(title) {
+            document.getElementById('dashboardOverlay').classList.add('active');
+            document.getElementById('dashboardTitle').textContent = title;
+            document.getElementById('dashboardTabs').style.display = 'none';
+            document.getElementById('dashboardContent').innerHTML = '<div class="dashboard-loading">加载中...</div>';
+        }
+
+        // ---- 标签管理 ----
+        async function openLabelsManager() {
+            openManagementView('🏷️ 标签管理');
+            await renderLabelsManager();
+        }
+
+        async function renderLabelsManager() {
+            const canManage = currentUser && (currentUser.permissions || []).includes('manage_labels');
+            const data = await apiGet('/api/labels');
+            if (!data.success) {
+                document.getElementById('dashboardContent').innerHTML = `<div class="dashboard-loading">加载失败</div>`;
+                return;
+            }
+            const labels = data.data;
+            const catMap = { customer_type: '客户类型', priority: '优先级', source: '来源', custom: '自定义' };
+            const visMap = { all: '所有人', manager_up: '主管及以上', super_admin_only: '仅超管' };
+            const html = `
+                ${canManage ? `<div style="margin-bottom:1rem;"><button class="btn-primary" onclick="openCreateLabel()">＋ 新建标签</button></div>` : ''}
+                <div class="chart-section">
+                    <h3>标签列表（共 ${labels.length} 个）</h3>
+                    <table class="dealer-table">
+                        <thead><tr><th>标签</th><th>分类</th><th>可见性</th><th>系统</th>${canManage ? '<th>操作</th>' : ''}</tr></thead>
+                        <tbody>
+                            ${labels.map(l => `<tr>
+                                <td><span class="label-tag" style="background:${hexToRgba(l.color,0.2)};border-color:${l.color};color:${l.color};">${escapeHtml(l.name)}</span></td>
+                                <td>${catMap[l.category] || l.category}</td>
+                                <td>${visMap[l.visibility] || l.visibility}</td>
+                                <td>${l.is_system ? '是' : '否'}</td>
+                                ${canManage ? `<td>${l.is_system ? '<span style="color:#7f8c9a;">—</span>' : `<span style="cursor:pointer;color:#e74c3c;" onclick="deleteLabel('${l.id}','${escapeHtml(l.name)}')">删除</span>`}</td>` : ''}
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            document.getElementById('dashboardContent').innerHTML = html;
+        }
+
+        function openCreateLabel() {
+            const body = `
+                <div class="modal-form-field">
+                    <label>标签名称 *</label>
+                    <input type="text" id="newLabelName" placeholder="如：🔥 高意向">
+                </div>
+                <div class="modal-form-field">
+                    <label>颜色</label>
+                    <input type="color" id="newLabelColor" value="#3498db" style="height:42px;">
+                </div>
+                <div class="modal-form-field">
+                    <label>分类</label>
+                    <select id="newLabelCategory">
+                        <option value="custom">自定义</option>
+                        <option value="customer_type">客户类型</option>
+                        <option value="priority">优先级</option>
+                        <option value="source">来源</option>
+                    </select>
+                </div>
+                <div class="modal-form-field">
+                    <label>可见性</label>
+                    <select id="newLabelVisibility">
+                        <option value="all">所有人</option>
+                        <option value="manager_up">主管及以上</option>
+                        <option value="super_admin_only">仅超管</option>
+                    </select>
+                </div>
+                <button class="btn-primary" style="width:100%;" onclick="submitCreateLabel()">创建标签</button>`;
+            openModal('新建标签', body);
+        }
+
+        async function submitCreateLabel() {
+            const name = document.getElementById('newLabelName').value.trim();
+            if (!name) { alert('请输入标签名称'); return; }
+            const payload = {
+                name,
+                color: document.getElementById('newLabelColor').value,
+                category: document.getElementById('newLabelCategory').value,
+                visibility: document.getElementById('newLabelVisibility').value
+            };
+            try {
+                const res = await fetch(`${API_BASE}/api/labels`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!data.success) { alert('创建失败: ' + data.error); return; }
+                closeModal();
+                renderLabelsManager();
+            } catch (e) { alert('创建失败: ' + e.message); }
+        }
+
+        async function deleteLabel(id, name) {
+            if (!confirm(`确定删除标签「${name}」？`)) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/labels/${id}`, {
+                    method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if (!data.success) { alert('删除失败: ' + data.error); return; }
+                renderLabelsManager();
+            } catch (e) { alert('删除失败: ' + e.message); }
+        }
+
+        // ---- 客户管理 ----
+        async function openCustomersView() {
+            openManagementView('👥 客户管理');
+            const data = await apiGet('/api/sales/customers');
+            if (!data.success) {
+                document.getElementById('dashboardContent').innerHTML = `<div class="dashboard-loading">加载失败</div>`;
+                return;
+            }
+            const customers = data.data || [];
+            const html = `
+                <div class="chart-section">
+                    <h3>客户列表（共 ${customers.length} 位）</h3>
+                    <table class="dealer-table">
+                        <thead><tr><th>姓名</th><th>电话</th><th>国家</th><th>来源</th><th>状态</th><th>负责人</th><th>创建时间</th></tr></thead>
+                        <tbody>
+                            ${customers.map(c => `<tr>
+                                <td>${escapeHtml(c.name || '-')}</td>
+                                <td>${escapeHtml(c.phone || '-')}</td>
+                                <td>${escapeHtml(c.country || '-')}</td>
+                                <td>${escapeHtml(c.source || '-')}</td>
+                                <td>${escapeHtml(c.status || '-')}</td>
+                                <td>${escapeHtml(c.agent_name || '未分配')}</td>
+                                <td>${formatDate(c.created_at)}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            document.getElementById('dashboardContent').innerHTML = html;
+        }
+
+        // ---- 客户分配 ----
+        async function openAssignmentsView() {
+            openManagementView('📋 客户分配');
+            const canAssign = currentUser && (currentUser.permissions || []).includes('assign_customers');
+            if (!canAssign) {
+                document.getElementById('dashboardContent').innerHTML = `<div class="chart-section"><div style="color:#7f8c9a;">您没有客户分配权限（需 assign_customers）。</div></div>`;
+                return;
+            }
+            const [unassignedRes, workloadRes] = await Promise.all([
+                apiGet('/api/assignments/unassigned'),
+                apiGet('/api/assignments/workload')
+            ]);
+            const unassigned = (unassignedRes.data || []);
+            const workload = (workloadRes.data || []);
+            // 供分配下拉使用的坐席列表（来自工作量统计）
+            const agentOptions = workload.map(w => `<option value="${w.agent_id}">${escapeHtml(w.agent_name)}（${w.active_customers}）</option>`).join('');
+            const hasAgents = workload.length > 0;
+            const html = `
+                <div class="chart-section">
+                    <h3>客服工作量</h3>
+                    <table class="dealer-table">
+                        <thead><tr><th>客服</th><th>负责客户数</th></tr></thead>
+                        <tbody>
+                            ${workload.length === 0 ? '<tr><td colspan="2" style="color:#7f8c9a;">暂无坐席，请先在「系统设置」创建员工账号</td></tr>' :
+                              workload.map(w => `<tr><td>${escapeHtml(w.agent_name || '-')}</td><td>${w.active_customers || 0}</td></tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="chart-section">
+                    <h3>未分配客户（${unassigned.length}）</h3>
+                    ${unassigned.length > 0 && hasAgents ? `<div style="margin-bottom:0.8rem;"><button class="btn-primary" onclick="autoAssignAll(this)">🤖 一键自动分配（负载均衡）</button> <span style="color:#7f8c9a;font-size:0.85rem;margin-left:0.5rem;">新客户进线时也会自动派单</span></div>` : ''}
+                    <table class="dealer-table">
+                        <thead><tr><th>姓名</th><th>国家</th><th>来源</th><th>创建时间</th><th>分配给</th></tr></thead>
+                        <tbody>
+                            ${unassigned.length === 0 ? '<tr><td colspan="5" style="color:#7f8c9a;">所有客户均已分配</td></tr>' :
+                              unassigned.map(c => `<tr data-cust="${c.id}">
+                                <td>${escapeHtml(c.name || '-')}</td>
+                                <td>${escapeHtml(c.country || '-')}</td>
+                                <td>${escapeHtml(c.source || '-')}</td>
+                                <td>${formatDate(c.created_at)}</td>
+                                <td>${hasAgents ? `
+                                    <select class="assign-select" style="padding:0.3rem;background:#0a0e27;color:#e0e6ed;border:1px solid #2c3e50;border-radius:4px;">
+                                        <option value="">选择坐席...</option>
+                                        ${agentOptions}
+                                    </select>
+                                    <button class="action-btn" style="margin-left:0.4rem;" onclick="assignCustomer('${c.id}', this)">分配</button>
+                                ` : '<span style="color:#7f8c9a;">无可用坐席</span>'}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            document.getElementById('dashboardContent').innerHTML = html;
+        }
+
+        async function assignCustomer(customerId, btn) {
+            const row = btn.closest('tr');
+            const select = row.querySelector('.assign-select');
+            const agentId = select.value;
+            if (!agentId) { alert('请先选择坐席'); return; }
+            btn.disabled = true;
+            btn.textContent = '分配中...';
+            try {
+                const res = await fetch(`${API_BASE}/api/assignments/assign`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify({ customer_id: customerId, assigned_to: agentId })
+                });
+                const data = await res.json();
+                if (!data.success) { alert('分配失败: ' + data.error); btn.disabled = false; btn.textContent = '分配'; return; }
+                openAssignmentsView(); // 刷新工作量与未分配列表
+            } catch (e) { alert('分配失败: ' + e.message); btn.disabled = false; btn.textContent = '分配'; }
+        }
+
+        async function autoAssignAll(btn) {
+            if (!confirm('将所有未分配客户按负载均衡自动派给坐席？')) return;
+            btn.disabled = true;
+            btn.textContent = '分配中...';
+            try {
+                const res = await fetch(`${API_BASE}/api/assignments/auto-assign-all`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if (!data.success) { alert('自动分配失败: ' + data.error); btn.disabled = false; btn.textContent = '🤖 一键自动分配（负载均衡）'; return; }
+                alert(data.message);
+                openAssignmentsView(); // 刷新
+            } catch (e) { alert('自动分配失败: ' + e.message); btn.disabled = false; btn.textContent = '🤖 一键自动分配（负载均衡）'; }
+        }
+
+        // ---- 系统设置 ----
+        async function openSettingsView() {
+            openManagementView('⚙️ 系统设置');
+            const canManageUsers = currentUser && (currentUser.permissions || []).includes('manage_users');
+            let usersHtml = '';
+            if (canManageUsers) {
+                const data = await apiGet('/api/staff/users');
+                const users = (data.data || []);
+                const roleMap = { super_admin: '超管', manager: '主管', agent: '坐席' };
+                usersHtml = `
+                    <div class="chart-section">
+                        <h3>员工账号（${users.length}）</h3>
+                        <div style="margin-bottom:0.8rem;"><button class="btn-primary" onclick="openCreateStaff()">＋ 新建员工</button></div>
+                        <table class="dealer-table">
+                            <thead><tr><th>用户名</th><th>姓名</th><th>角色</th><th>状态</th><th>最后登录</th></tr></thead>
+                            <tbody>
+                                ${users.map(u => `<tr>
+                                    <td>${escapeHtml(u.username)}</td>
+                                    <td>${escapeHtml(u.full_name || '-')}</td>
+                                    <td>${roleMap[u.role] || u.role}</td>
+                                    <td>${u.status === 'active' ? '✅ 活跃' : '⛔ ' + u.status}</td>
+                                    <td>${formatDateTime(u.last_login_at)}</td>
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+            }
+            const html = `
+                <div class="chart-section">
+                    <h3>当前账户</h3>
+                    <div class="info-field"><div class="info-label">姓名</div><div class="info-value">${escapeHtml(currentUser.full_name)}</div></div>
+                    <div class="info-field"><div class="info-label">用户名</div><div class="info-value">${escapeHtml(currentUser.username)}</div></div>
+                    <div class="info-field"><div class="info-label">角色</div><div class="info-value">${currentUser.role}</div></div>
+                    <button class="btn-primary" style="margin-top:0.5rem;" onclick="openChangePassword()">修改密码</button>
+                </div>
+                ${usersHtml}`;
+            document.getElementById('dashboardContent').innerHTML = html;
+        }
+
+        function openChangePassword() {
+            const body = `
+                <div class="modal-form-field">
+                    <label>当前密码</label>
+                    <input type="password" id="oldPassword">
+                </div>
+                <div class="modal-form-field">
+                    <label>新密码（至少6位）</label>
+                    <input type="password" id="newPassword">
+                </div>
+                <button class="btn-primary" style="width:100%;" onclick="submitChangePassword()">确认修改</button>`;
+            openModal('修改密码', body);
+        }
+
+        async function submitChangePassword() {
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            if (!oldPassword || !newPassword) { alert('请填写完整'); return; }
+            if (newPassword.length < 6) { alert('新密码至少6位'); return; }
+            try {
+                const res = await fetch(`${API_BASE}/api/staff/me/password`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })
+                });
+                const data = await res.json();
+                if (!data.success) { alert('修改失败: ' + data.error); return; }
+                alert('密码修改成功');
+                closeModal();
+            } catch (e) { alert('修改失败: ' + e.message); }
+        }
+
+        function openCreateStaff() {
+            const body = `
+                <div class="modal-form-field">
+                    <label>用户名 *</label>
+                    <input type="text" id="newStaffUsername" placeholder="登录用户名">
+                </div>
+                <div class="modal-form-field">
+                    <label>姓名 *</label>
+                    <input type="text" id="newStaffFullName" placeholder="显示姓名">
+                </div>
+                <div class="modal-form-field">
+                    <label>密码 *（至少6位）</label>
+                    <input type="password" id="newStaffPassword">
+                </div>
+                <div class="modal-form-field">
+                    <label>角色</label>
+                    <select id="newStaffRole">
+                        <option value="agent">坐席</option>
+                        <option value="manager">主管</option>
+                        <option value="super_admin">超级管理员</option>
+                    </select>
+                </div>
+                <button class="btn-primary" style="width:100%;" onclick="submitCreateStaff()">创建员工</button>`;
+            openModal('新建员工', body);
+        }
+
+        async function submitCreateStaff() {
+            const username = document.getElementById('newStaffUsername').value.trim();
+            const full_name = document.getElementById('newStaffFullName').value.trim();
+            const password = document.getElementById('newStaffPassword').value;
+            const role = document.getElementById('newStaffRole').value;
+            if (!username || !full_name || !password) { alert('请填写用户名、姓名和密码'); return; }
+            if (password.length < 6) { alert('密码至少6位'); return; }
+            try {
+                const res = await fetch(`${API_BASE}/api/staff/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify({ username, full_name, password, role })
+                });
+                const data = await res.json();
+                if (!data.success) { alert('创建失败: ' + data.error); return; }
+                closeModal();
+                openSettingsView(); // 刷新员工列表
+            } catch (e) { alert('创建失败: ' + e.message); }
+        }
+
+        // ---- 产品库 ----
+        async function openProductsView() {
+            openManagementView('🚗 产品库');
+            await renderProducts();
+        }
+
+        async function renderProducts(searchParams = {}) {
+            const { q = '', brand = '', category = '' } = searchParams;
+            const params = new URLSearchParams({ q, brand, category, limit: 100 });
+            const data = await apiGet(`/api/products?${params}`);
+
+            if (!data.success) {
+                document.getElementById('dashboardContent').innerHTML = `<div class="dashboard-loading">加载失败: ${data.error || ''}</div>`;
+                return;
+            }
+
+            const products = data.data || [];
+            const stockMap = { in_stock: '现货🟢', pre_order: '期货🟡', out_of_stock: '无货🔴' };
+            const stockClass = { in_stock: 'in-stock', pre_order: 'pre-order', out_of_stock: 'out-of-stock' };
+
+            const html = `
+                <div class="products-toolbar">
+                    <input type="text" class="search-input" placeholder="🔍 搜索品牌、车型..." value="${escapeHtml(q)}" onchange="searchProducts(this.value)">
+                    <select class="filter-select" onchange="filterByBrand(this.value)">
+                        <option value="">全部品牌</option>
+                        <option value="Toyota" ${brand==='Toyota'?'selected':''}>Toyota</option>
+                        <option value="BYD" ${brand==='BYD'?'selected':''}>BYD</option>
+                        <option value="Ford" ${brand==='Ford'?'selected':''}>Ford</option>
+                        <option value="Mercedes-Benz" ${brand==='Mercedes-Benz'?'selected':''}>Mercedes-Benz</option>
+                        <option value="Chery" ${brand==='Chery'?'selected':''}>Chery</option>
+                    </select>
+                    <select class="filter-select" onchange="filterByCategory(this.value)">
+                        <option value="">全部类别</option>
+                        <option value="sedan" ${category==='sedan'?'selected':''}>轿车</option>
+                        <option value="suv" ${category==='suv'?'selected':''}>SUV</option>
+                        <option value="ev" ${category==='ev'?'selected':''}>纯电</option>
+                        <option value="pickup" ${category==='pickup'?'selected':''}>皮卡</option>
+                    </select>
+                    <button class="btn-primary" onclick="openCreateProduct()">＋ 新增产品</button>
+                </div>
+                <div class="products-grid">
+                    ${products.length === 0 ? '<div class="empty-state"><div class="empty-state-icon">🚗</div><div>暂无产品</div></div>' :
+                      products.map(p => {
+                        const img = (p.images && p.images.length > 0) ? p.images[0] : 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400';
+                        const specs = p.specs || {};
+                        const specsText = [specs.engine, specs.transmission, specs.horsepower].filter(Boolean).join(' · ') || '配置详情请查看';
+                        return `
+                        <div class="product-card">
+                            <img src="${img}" alt="${escapeHtml(p.brand)} ${escapeHtml(p.model)}" class="product-image" onerror="this.src='https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400'">
+                            <div class="product-info">
+                                <div class="product-header">
+                                    <div>
+                                        <div class="product-brand">${escapeHtml(p.brand)}</div>
+                                        <div class="product-title">${escapeHtml(p.model)} ${p.year || ''}</div>
+                                        ${p.variant ? `<div style="font-size:0.8rem;color:#95a5a6;margin-top:0.2rem;">${escapeHtml(p.variant)}</div>` : ''}
+                                    </div>
+                                    <span class="stock-badge ${stockClass[p.stock_status] || ''}">${stockMap[p.stock_status] || p.stock_status}</span>
+                                </div>
+                                <div class="product-price">${p.currency || 'USD'} $${Number(p.price).toLocaleString()}</div>
+                                <div class="product-specs">${specsText}</div>
+                                <div class="product-actions">
+                                    <button class="btn-send" onclick="sendProductToCustomer('${p.id}')" ${!currentCustomerId ? 'disabled title="请先选择客户"' : ''}>📤 发给客户</button>
+                                    <button class="action-btn" onclick="openEditProduct('${p.id}')">✏️</button>
+                                    <button class="action-btn" onclick="deleteProduct('${p.id}')">🗑</button>
+                                </div>
+                            </div>
+                        </div>`;
+                      }).join('')}
+                </div>`;
+
+            document.getElementById('dashboardContent').innerHTML = html;
+        }
+
+        function searchProducts(q) {
+            renderProducts({ q });
+        }
+
+        function filterByBrand(brand) {
+            renderProducts({ brand });
+        }
+
+        function filterByCategory(category) {
+            renderProducts({ category });
+        }
+
+        async function sendProductToCustomer(productId) {
+            if (!currentCustomerId) {
+                alert('请先在左侧客户列表选择一个客户，再发送产品');
+                return;
+            }
+
+            try {
+                // 获取产品详情
+                const prodResp = await fetch(`${API_BASE}/api/products/${productId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const prodData = await prodResp.json();
+                if (!prodData.success) {
+                    alert('获取产品失败: ' + prodData.error);
+                    return;
+                }
+
+                const p = prodData.data;
+                const specs = p.specs || {};
+
+                // 拼装文案
+                let content = `🚗 ${p.brand} ${p.model} ${p.year || ''}\n`;
+                if (p.variant) content += `📦 ${p.variant}\n`;
+                content += `💰 ${p.currency || 'USD'} $${Number(p.price).toLocaleString()}\n\n`;
+
+                // 关键参数
+                const keySpecs = [];
+                if (specs.engine) keySpecs.push(`🔧 ${specs.engine}`);
+                if (specs.transmission) keySpecs.push(`⚙️ ${specs.transmission}`);
+                if (specs.horsepower) keySpecs.push(`⚡ ${specs.horsepower}`);
+                if (specs.fuel_type) keySpecs.push(`⛽ ${specs.fuel_type}`);
+                if (specs.drive_type) keySpecs.push(`🚙 ${specs.drive_type}`);
+                if (specs.seats) keySpecs.push(`👥 ${specs.seats} 座`);
+                if (specs.range_km) keySpecs.push(`🔋 ${specs.range_km} km 续航`);
+                if (keySpecs.length > 0) content += keySpecs.join('\n') + '\n\n';
+
+                if (p.description) content += p.description;
+
+                // 首图作附件，文案作说明
+                const firstImage = (p.images && p.images.length > 0) ? p.images[0] : null;
+
+                if (!firstImage) {
+                    alert('该产品没有图片，无法发送');
+                    return;
+                }
+
+                // 调用现有的消息发送接口
+                const resp = await fetch(`${API_BASE}/api/messages/send`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        customer_id: currentCustomerId,
+                        message_type: 'image',
+                        attachments: {
+                            url: firstImage,
+                            filename: `${p.brand}_${p.model}.jpg`
+                        },
+                        content: content
+                    })
+                });
+
+                const data = await resp.json();
+                if (!data.success) {
+                    alert('发送失败: ' + data.error);
+                    return;
+                }
+
+                if (data.data.delivered === false) {
+                    alert('⚠️ 消息已存档，但未能送达客户 WhatsApp:\n' + (data.data.delivery_error || '该客户可能尚未通过 WhatsApp 进线'));
+                } else {
+                    alert('✅ 产品已发送给客户！');
+                    // 刷新聊天记录
+                    if (currentCustomerId) {
+                        await loadCustomerChat(currentCustomerId);
+                    }
+                }
+
+            } catch (error) {
+                console.error('发送产品失败:', error);
+                alert('发送失败: ' + error.message);
+            }
+        }
+
+        async function deleteProduct(productId) {
+            if (!confirm('确定要删除这个产品吗？（软删除，不会真正删除数据）')) return;
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/products/${productId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await resp.json();
+                if (!data.success) {
+                    alert('删除失败: ' + data.error);
+                    return;
+                }
+                renderProducts(); // 刷新列表
+            } catch (error) {
+                alert('删除失败: ' + error.message);
+            }
+        }
+
+        function openCreateProduct() {
+            const body = `
+                <div class="modal-form-field">
+                    <label>品牌 *</label>
+                    <input type="text" id="prodBrand" placeholder="Toyota">
+                </div>
+                <div class="modal-form-field">
+                    <label>车型 *</label>
+                    <input type="text" id="prodModel" placeholder="Camry">
+                </div>
+                <div class="modal-form-field">
+                    <label>年款</label>
+                    <input type="number" id="prodYear" placeholder="2024">
+                </div>
+                <div class="modal-form-field">
+                    <label>配置版本</label>
+                    <input type="text" id="prodVariant" placeholder="2.5L 豪华版">
+                </div>
+                <div class="modal-form-field">
+                    <label>类别</label>
+                    <select id="prodCategory">
+                        <option value="sedan">轿车</option>
+                        <option value="suv">SUV</option>
+                        <option value="ev">纯电</option>
+                        <option value="pickup">皮卡</option>
+                    </select>
+                </div>
+                <div class="modal-form-field">
+                    <label>价格 *</label>
+                    <input type="number" id="prodPrice" placeholder="28500">
+                </div>
+                <div class="modal-form-field">
+                    <label>币种</label>
+                    <select id="prodCurrency">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="CNY">CNY</option>
+                        <option value="RUB">RUB</option>
+                    </select>
+                </div>
+                <div class="modal-form-field">
+                    <label>产品描述</label>
+                    <textarea id="prodDesc" rows="3" style="width:100%;padding:0.5rem;background:#0f1729;border:1px solid #2c3e50;border-radius:4px;color:#ecf0f1;resize:vertical;"></textarea>
+                </div>
+                <div class="modal-form-field">
+                    <label>图片 URL（多张用逗号分隔）</label>
+                    <textarea id="prodImages" rows="2" style="width:100%;padding:0.5rem;background:#0f1729;border:1px solid #2c3e50;border-radius:4px;color:#ecf0f1;"></textarea>
+                    <div style="font-size:0.75rem;color:#95a5a6;margin-top:0.3rem;">暂不支持上传，请先把图片传到图床获取公网 URL</div>
+                </div>
+                <div class="modal-form-field">
+                    <label>库存状态</label>
+                    <select id="prodStock">
+                        <option value="in_stock">现货</option>
+                        <option value="pre_order">期货</option>
+                        <option value="out_of_stock">无货</option>
+                    </select>
+                </div>
+                <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+                    <button class="btn-primary" style="flex:1;" onclick="aiGenerateSpecs()">🤖 AI 补全配置</button>
+                    <button class="btn-primary" style="flex:1;" onclick="submitCreateProduct()">创建产品</button>
+                </div>
+                <div id="aiSpecsPreview" style="margin-top:1rem;padding:0.8rem;background:#0f1729;border-radius:6px;display:none;max-height:200px;overflow-y:auto;font-size:0.85rem;color:#95a5a6;"></div>`;
+            openModal('新增产品', body);
+        }
+
+        let pendingSpecs = {};
+
+        async function aiGenerateSpecs() {
+            const brand = document.getElementById('prodBrand').value.trim();
+            const model = document.getElementById('prodModel').value.trim();
+            const year = document.getElementById('prodYear').value.trim();
+            const variant = document.getElementById('prodVariant').value.trim();
+            const category = document.getElementById('prodCategory').value;
+
+            if (!brand || !model) {
+                alert('请先填写品牌和车型');
+                return;
+            }
+
+            const previewEl = document.getElementById('aiSpecsPreview');
+            previewEl.style.display = 'block';
+            previewEl.innerHTML = '⏳ AI 补全中...';
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/products/generate-specs`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ brand, model, year, variant, category })
+                });
+                const data = await resp.json();
+                if (!data.success) {
+                    previewEl.innerHTML = '❌ 补全失败: ' + data.error;
+                    return;
+                }
+
+                pendingSpecs = data.data || {};
+                const desc = '';
+
+                // 回填描述
+                if (desc && !document.getElementById('prodDesc').value) {
+                    document.getElementById('prodDesc').value = desc;
+                }
+
+                // 显示预览
+                const specsText = Object.entries(pendingSpecs).map(([k, v]) => `${k}: ${v}`).join('\n');
+                previewEl.innerHTML = `✅ AI 已补全配置（创建时会自动附加）:\n\n${specsText || '(空)'}`;
+            } catch (error) {
+                previewEl.innerHTML = '❌ 补全失败: ' + error.message;
+            }
+        }
+
+        async function submitCreateProduct() {
+            const brand = document.getElementById('prodBrand').value.trim();
+            const model = document.getElementById('prodModel').value.trim();
+            const year = parseInt(document.getElementById('prodYear').value) || null;
+            const variant = document.getElementById('prodVariant').value.trim() || null;
+            const category = document.getElementById('prodCategory').value;
+            const price = parseFloat(document.getElementById('prodPrice').value);
+            const currency = document.getElementById('prodCurrency').value;
+            const description = document.getElementById('prodDesc').value.trim();
+            const imagesText = document.getElementById('prodImages').value.trim();
+            const stock_status = document.getElementById('prodStock').value;
+
+            if (!brand || !model) {
+                alert('品牌和车型是必填项');
+                return;
+            }
+            if (isNaN(price) || price <= 0) {
+                alert('请输入有效价格');
+                return;
+            }
+
+            const images = imagesText ? imagesText.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/products`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        brand, model, year, variant, category, price, currency,
+                        description, images, stock_status,
+                        specs: pendingSpecs
+                    })
+                });
+                const data = await resp.json();
+                if (!data.success) {
+                    alert('创建失败: ' + data.error);
+                    return;
+                }
+
+                pendingSpecs = {};
+                closeModal();
+                renderProducts(); // 刷新列表
+            } catch (error) {
+                alert('创建失败: ' + error.message);
+            }
+        }
+
+        async function openEditProduct(productId) {
+            try {
+                const resp = await fetch(`${API_BASE}/api/products/${productId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await resp.json();
+                if (!data.success) {
+                    alert('获取产品失败: ' + data.error);
+                    return;
+                }
+
+                const p = data.data;
+                const body = `
+                    <input type="hidden" id="editProdId" value="${p.id}">
+                    <div class="modal-form-field">
+                        <label>品牌 *</label>
+                        <input type="text" id="editProdBrand" value="${escapeHtml(p.brand)}">
+                    </div>
+                    <div class="modal-form-field">
+                        <label>车型 *</label>
+                        <input type="text" id="editProdModel" value="${escapeHtml(p.model)}">
+                    </div>
+                    <div class="modal-form-field">
+                        <label>年款</label>
+                        <input type="number" id="editProdYear" value="${p.year || ''}">
+                    </div>
+                    <div class="modal-form-field">
+                        <label>配置版本</label>
+                        <input type="text" id="editProdVariant" value="${escapeHtml(p.variant || '')}">
+                    </div>
+                    <div class="modal-form-field">
+                        <label>类别</label>
+                        <select id="editProdCategory">
+                            <option value="sedan" ${p.category==='sedan'?'selected':''}>轿车</option>
+                            <option value="suv" ${p.category==='suv'?'selected':''}>SUV</option>
+                            <option value="ev" ${p.category==='ev'?'selected':''}>纯电</option>
+                            <option value="pickup" ${p.category==='pickup'?'selected':''}>皮卡</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-field">
+                        <label>价格 *</label>
+                        <input type="number" id="editProdPrice" value="${p.price}">
+                    </div>
+                    <div class="modal-form-field">
+                        <label>币种</label>
+                        <select id="editProdCurrency">
+                            <option value="USD" ${p.currency==='USD'?'selected':''}>USD</option>
+                            <option value="EUR" ${p.currency==='EUR'?'selected':''}>EUR</option>
+                            <option value="CNY" ${p.currency==='CNY'?'selected':''}>CNY</option>
+                            <option value="RUB" ${p.currency==='RUB'?'selected':''}>RUB</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-field">
+                        <label>产品描述</label>
+                        <textarea id="editProdDesc" rows="3" style="width:100%;padding:0.5rem;background:#0f1729;border:1px solid #2c3e50;border-radius:4px;color:#ecf0f1;resize:vertical;">${escapeHtml(p.description || '')}</textarea>
+                    </div>
+                    <div class="modal-form-field">
+                        <label>图片 URL（多张用逗号分隔）</label>
+                        <textarea id="editProdImages" rows="2" style="width:100%;padding:0.5rem;background:#0f1729;border:1px solid #2c3e50;border-radius:4px;color:#ecf0f1;">${(p.images || []).join(', ')}</textarea>
+                    </div>
+                    <div class="modal-form-field">
+                        <label>库存状态</label>
+                        <select id="editProdStock">
+                            <option value="in_stock" ${p.stock_status==='in_stock'?'selected':''}>现货</option>
+                            <option value="pre_order" ${p.stock_status==='pre_order'?'selected':''}>期货</option>
+                            <option value="out_of_stock" ${p.stock_status==='out_of_stock'?'selected':''}>无货</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-field">
+                        <label>配置参数（JSON 格式，高级）</label>
+                        <textarea id="editProdSpecs" rows="4" style="width:100%;padding:0.5rem;background:#0f1729;border:1px solid #2c3e50;border-radius:4px;color:#ecf0f1;font-family:monospace;font-size:0.8rem;">${JSON.stringify(p.specs || {}, null, 2)}</textarea>
+                    </div>
+                    <button class="btn-primary" style="width:100%;" onclick="submitEditProduct()">保存修改</button>`;
+                openModal('编辑产品', body);
+            } catch (error) {
+                alert('获取产品失败: ' + error.message);
+            }
+        }
+
+        async function submitEditProduct() {
+            const id = document.getElementById('editProdId').value;
+            const brand = document.getElementById('editProdBrand').value.trim();
+            const model = document.getElementById('editProdModel').value.trim();
+            const year = parseInt(document.getElementById('editProdYear').value) || null;
+            const variant = document.getElementById('editProdVariant').value.trim() || null;
+            const category = document.getElementById('editProdCategory').value;
+            const price = parseFloat(document.getElementById('editProdPrice').value);
+            const currency = document.getElementById('editProdCurrency').value;
+            const description = document.getElementById('editProdDesc').value.trim();
+            const imagesText = document.getElementById('editProdImages').value.trim();
+            const stock_status = document.getElementById('editProdStock').value;
+            const specsText = document.getElementById('editProdSpecs').value.trim();
+
+            if (!brand || !model || isNaN(price) || price <= 0) {
+                alert('品牌、车型和有效价格是必填项');
+                return;
+            }
+
+            const images = imagesText ? imagesText.split(',').map(s => s.trim()).filter(Boolean) : [];
+            let specs = {};
+            if (specsText) {
+                try {
+                    specs = JSON.parse(specsText);
+                } catch {
+                    alert('配置参数 JSON 格式错误');
+                    return;
+                }
+            }
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/products/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        brand, model, year, variant, category, price, currency,
+                        description, images, stock_status, specs
+                    })
+                });
+                const data = await resp.json();
+                if (!data.success) {
+                    alert('更新失败: ' + data.error);
+                    return;
+                }
+
+                closeModal();
+                renderProducts();
+            } catch (error) {
+                alert('更新失败: ' + error.message);
+            }
+        }
+
+        // openDashboard 需要重新显示 tabs（管理视图会隐藏它们）
+        const _origOpenDashboard = openDashboard;
+        openDashboard = function() {
+            document.getElementById('dashboardTabs').style.display = 'flex';
+            document.getElementById('dashboardTitle').textContent = '📊 数据分析';
+            _origOpenDashboard();
+        };
+
+        // 启动应用
+        init();
+        // PLACEHOLDER_SCRIPT_END
+    </script>
+</body>
+</html>

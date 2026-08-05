@@ -1,0 +1,186 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://autozq.ru/#organization",
+      "name": "AutoZQ",
+      "legalName": "Shaanxi Zhongqi International Supply Chain Co., Ltd.",
+      "url": "https://autozq.ru",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://autozq.ru/logo.png",
+        "width": 512,
+        "height": 512
+      },
+      "description": "Профессиональный экспорт автомобилей из Китая в Россию через Маньчжурию. Специализация на автомобилях до 160 л.с. 10 лет опыта.",
+      "foundingDate": "2014",
+      "contactPoint": [
+        {
+          "@type": "ContactPoint",
+          "telephone": "+86-xxx-xxxx-xxxx",
+          "contactType": "customer service",
+          "areaServed": ["RU", "CN"],
+          "availableLanguage": ["Russian", "Chinese", "English"]
+        }
+      ],
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Manzhouli",
+        "addressRegion": "Inner Mongolia",
+        "addressCountry": "CN"
+      },
+      "sameAs": [
+        "https://t.me/autozq",
+        "https://wa.me/xxxxxxxxxxxxx"
+      ]
+    },
+    {
+      "@type": "AutoDealer",
+      "@id": "https://autozq.ru/#dealer",
+      "name": "AutoZQ Car Export",
+      "image": "https://autozq.ru/images/showroom.jpg",
+      "priceRange": "$8,000 - $50,000",
+      "paymentAccepted": ["Cash", "Bank Transfer", "VTB Bank"],
+      "currenciesAccepted": "USD, CNY, RUB",
+      "areaServed": {
+        "@type": "Country",
+        "name": "Russia"
+      },
+      "brand": [
+        {
+          "@type": "Brand",
+          "name": "Toyota"
+        },
+        {
+          "@type": "Brand",
+          "name": "Lexus"
+        },
+        {
+          "@type": "Brand",
+          "name": "Honda"
+        },
+        {
+          "@type": "Brand",
+          "name": "Nissan"
+        }
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://autozq.ru/#website",
+      "url": "https://autozq.ru",
+      "name": "AutoZQ - Экспорт автомобилей из Китая в Россию",
+      "description": "Профессиональный экспорт новых и подержанных автомобилей из Китая в Россию",
+      "publisher": {
+        "@id": "https://autozq.ru/#organization"
+      },
+      "inLanguage": ["ru", "zh", "en"],
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://autozq.ru/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "Service",
+      "@id": "https://autozq.ru/#service-export",
+      "serviceType": "Car Export Service",
+      "name": "Экспорт автомобилей из Китая в Россию",
+      "description": "Полный цикл экспорта автомобилей: подбор, проверка, документация, доставка",
+      "provider": {
+        "@id": "https://autozq.ru/#organization"
+      },
+      "areaServed": {
+        "@type": "Country",
+        "name": "Russia"
+      },
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Individual car buyers and dealers in Russia"
+      },
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "USD",
+        "lowPrice": "8000",
+        "highPrice": "50000",
+        "offerCount": "500+",
+        "availability": "https://schema.org/InStock"
+      },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Car Inventory",
+        "itemListElement": [
+          {
+            "@type": "OfferCatalog",
+            "name": "Cars under 160 HP",
+            "description": "Vehicles exempt from Russian recycling fee"
+          },
+          {
+            "@type": "OfferCatalog",
+            "name": "Cars 160-200 HP",
+            "description": "Higher performance vehicles"
+          }
+        ]
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://autozq.ru/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Почему стоит выбрать автомобили до 160 л.с.?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Автомобили мощностью до 160 л.с. освобождены от утильсбора при ввозе в Россию, что экономит от 50,000 до 350,000 рублей."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Сколько времени занимает доставка?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Полный цикл от выбора автомобиля до доставки в ваш город занимает 45-60 дней."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Как происходит оплата?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Мы принимаем оплату через VTB банк, что решает проблему международных переводов. Также возможна оплата в юанях или долларах."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Есть ли гарантия качества?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Да, мы проводим двойную проверку: первая - в месте покупки в Китае, вторая - в Маньчжурии перед отправкой в Россию."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Какие документы предоставляются?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Полный пакет экспортных документов для таможенного оформления в России, включая инвойс, контракт, сертификат происхождения."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://autozq.ru/#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Главная",
+          "item": "https://autozq.ru/"
+        }
+      ]
+    }
+  ]
+}

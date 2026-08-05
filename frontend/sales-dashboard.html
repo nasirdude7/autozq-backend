@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoZQ 销售工作台</title>
+    <script src="/js/auth-guard.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            color: #7f8c8d;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .translate-form {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input, select, textarea, button {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #ecf0f1;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+
+        .customer-list {
+            margin-top: 1rem;
+        }
+
+        .customer-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .customer-item:last-child {
+            border-bottom: none;
+        }
+
+        .customer-info h4 {
+            margin-bottom: 0.25rem;
+            color: #2c3e50;
+        }
+
+        .customer-info p {
+            color: #7f8c8d;
+            font-size: 0.875rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.hot {
+            background: #fee;
+            color: #c00;
+        }
+
+        .badge.warm {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+
+        .badge.cold {
+            background: #dfe6e9;
+            color: #2d3436;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚗 AutoZQ 销售工作台</h1>
+    </div>
+
+    <div class="container">
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>总客户数</h3>
+                <div class="value" id="totalCustomers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>活跃会话</h3>
+                <div class="value" id="activeChats">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>今日消息</h3>
+                <div class="value" id="todayMessages">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>待跟进</h3>
+                <div class="value" id="pendingFollowups">-</div>
+            </div>
+        </div>
+
+        <!-- AI 翻译测试 -->
+        <div class="section">
+            <h2>🌐 AI 翻译测试</h2>
+            <div class="translate-form">
+                <div class="form-group" style="flex: 2;">
+                    <label for="translateText">输入文本</label>
+                    <textarea id="translateText" placeholder="输入要翻译的文本...">Hello, I'm interested in buying a car.</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="targetLang">目标语言</label>
+                    <select id="targetLang">
+                        <option value="zh">中文</option>
+                        <option value="en">English</option>
+                        <option value="ru">Русский</option>
+                        <option value="ar">العربية</option>
+                        <option value="es">Español</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button onclick="testTranslate()" id="translateBtn">翻译</button>
+                </div>
+            </div>
+            <div id="translateResult"></div>
+        </div>
+
+        <!-- 客户列表 -->
+        <div class="section">
+            <h2>👥 最近客户</h2>
+            <div id="customerList" class="customer-list">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.API_BASE || window.location.origin;
+
+        // 加载统计数据
+        async function loadStats() {
+            try {
+                const res = await authFetch(`${API_BASE}/api/sales/stats/dashboard`);
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('totalCustomers').textContent = data.data.totalCustomers || 0;
+                    document.getElementById('activeChats').textContent = data.data.activeConversations || 0;
+                    document.getElementById('todayMessages').textContent = data.data.todayMessages || 0;
+                    document.getElementById('pendingFollowups').textContent = data.data.pendingFollowups || 0;
+                }
+            } catch (err) {
+                console.error('加载统计失败:', err);
+            }
+        }
+
+        // 加载客户列表
+        async function loadCustomers() {
+            try {
+                const res = await authFetch(`${API_BASE}/api/sales/customers?limit=10`);
+                const data = await res.json();
+
+                const container = document.getElementById('customerList');
+
+                if (data.success && data.data.length > 0) {
+                    container.innerHTML = data.data.map(c => `
+                        <div class="customer-item">
+                            <div class="customer-info">
+                                <h4>${c.name}</h4>
+                                <p>${c.country || '未知国家'} · ${c.source || '未知来源'}</p>
+                            </div>
+                            <span class="badge ${c.rating || 'cold'}">${c.rating || 'cold'}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="loading">暂无客户数据</div>';
+                }
+            } catch (err) {
+                console.error('加载客户失败:', err);
+                document.getElementById('customerList').innerHTML = '<div class="loading">加载失败</div>';
+            }
+        }
+
+        // 翻译测试
+        async function testTranslate() {
+            const text = document.getElementById('translateText').value.trim();
+            const target_language = document.getElementById('targetLang').value;
+            const btn = document.getElementById('translateBtn');
+            const resultDiv = document.getElementById('translateResult');
+
+            if (!text) {
+                resultDiv.innerHTML = '<div class="result error">请输入要翻译的文本</div>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '翻译中...';
+            resultDiv.innerHTML = '<div class="result">正在翻译...</div>';
+
+            try {
+                const res = await authFetch(`${API_BASE}/api/sales/chat/translate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, target_language })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <strong>原文：</strong> ${data.original}<br>
+                            <strong>译文：</strong> ${data.translated}<br>
+                            <small>模型：${data.model || '未知'}</small>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="result error">翻译失败：${data.error}</div>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<div class="result error">请求失败：${err.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '翻译';
+            }
+        }
+
+        // 页面加载时执行
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadCustomers();
+        });
+    </script>
+</body>
+</html>
